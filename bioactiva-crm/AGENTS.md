@@ -1,240 +1,170 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # BioActiva CRM — Guía para Agentes IA
 
-> Este archivo define las reglas, estructura, convenciones y contexto del proyecto para que cualquier agente IA (Claude, Cursor, Copilot, etc.) trabaje de forma coherente, sin duplicar código y respetando los estándares del equipo.
+> Este archivo define las reglas, estructura, convenciones y contexto completo del proyecto para que cualquier agente IA trabaje de forma coherente, sin duplicar código y respetando los estándares del equipo.
 
 ---
 
 ## 1. Contexto del Proyecto
 
-**BioActiva** es una empresa peruana especializada en gestión de innovación, I+D+i y propiedad intelectual. Este CRM centraliza su operación comercial: organizaciones, contactos, leads, cotizaciones, notificaciones, dashboards e importación/exportación de datos.
+**BioActiva** es una empresa peruana especializada en gestión de innovación, I+D+i, formulación de proyectos, vigilancia tecnológica y propiedad intelectual. Este CRM centraliza su operación comercial reemplazando hojas de Excel manuales.
 
-- **Stack**: Next.js 16 (App Router) + TypeScript + Tailwind CSS + Zustand + React Query + Zod
-- **Backend**: NestJS + PostgreSQL + Prisma ORM (equipo paralelo)
-- **Estado actual**: El backend aún no está listo. Usar **data mockeada** mientras tanto.
-- **Roles**: `Administrador` y `Trabajador` (distintos permisos, misma app)
+### Problema que resuelve
+- Duplicidad de datos en Excel
+- Pérdida de seguimiento de oportunidades comerciales
+- Falta de visibilidad del proceso comercial
+- Dificultad para validar organizaciones
 
----
-
-## 2. Reglas Críticas (NO negociables)
-
-### 2.1 Mock → API: Patrón de integración
-El switch entre mock y API real se controla **únicamente** en `src/services/modules/*.service.ts`.
-Nunca escribas URLs hardcodeadas en componentes, hooks o páginas.
-
-```ts
-// src/services/modules/organizaciones.service.ts
-import { USE_MOCK } from '@/lib/constants/config'
-import { ENDPOINTS } from '@/services/api/endpoints'
-import { apiClient } from '@/services/api/client'
-import * as mock from '@/services/mock/organizaciones.mock'
-
-export const organizacionesService = {
-  getAll: async (filters?) => {
-    if (USE_MOCK) return mock.getOrganizaciones(filters)
-    return apiClient.get(ENDPOINTS.organizaciones.list, { params: filters })
-  },
-  // ...
-}
-```
-
-Cuando el backend esté listo: cambiar `USE_MOCK=false` en `.env.local`. **Nada más.**
-
-### 2.2 Todas las URLs en un solo lugar
-```ts
-// src/services/api/endpoints.ts  ← ÚNICO lugar donde viven las URLs
-export const ENDPOINTS = {
-  auth: {
-    login:          '/api/auth/login',
-    forgotPassword: '/api/auth/forgot-password',
-    resetPassword:  '/api/auth/reset-password',
-    activate:       '/api/auth/activate',
-  },
-  usuarios: {
-    list:    '/api/usuarios',
-    invite:  '/api/usuarios/invite',
-    disable: (id: number) => `/api/usuarios/${id}/disable`,
-  },
-  organizaciones: {
-    list:   '/api/organizaciones',
-    detail: (id: string) => `/api/organizaciones/${id}`,
-    create: '/api/organizaciones',
-    update: (id: string) => `/api/organizaciones/${id}`,
-    sunat:  '/api/organizaciones/sunat',
-  },
-  contactos: {
-    list:   '/api/contactos',
-    detail: (id: number) => `/api/contactos/${id}`,
-    create: '/api/contactos',
-    update: (id: number) => `/api/contactos/${id}`,
-  },
-  leads: {
-    list:      '/api/leads',
-    detail:    (id: number) => `/api/leads/${id}`,
-    create:    '/api/leads',
-    update:    (id: number) => `/api/leads/${id}`,
-    pipeline:  '/api/leads/pipeline',
-  },
-  actividades: {
-    byLead:   (leadId: number) => `/api/leads/${leadId}/actividades`,
-    create:   (leadId: number) => `/api/leads/${leadId}/actividades`,
-    complete: (id: number) => `/api/actividades/${id}/complete`,
-    delete:   (id: number) => `/api/actividades/${id}`,
-  },
-  cotizaciones: {
-    list:   '/api/cotizaciones',
-    detail: (id: number) => `/api/cotizaciones/${id}`,
-    create: '/api/cotizaciones',
-    update: (id: number) => `/api/cotizaciones/${id}`,
-  },
-  notificaciones: {
-    list:      '/api/notificaciones',
-    cancel:    (id: number) => `/api/notificaciones/${id}/cancel`,
-    reminder:  '/api/notificaciones/recordatorio',
-    seguimiento: '/api/notificaciones/seguimiento',
-  },
-  plantillas: {
-    list:   '/api/plantillas',
-    detail: (id: number) => `/api/plantillas/${id}`,
-    create: '/api/plantillas',
-    update: (id: number) => `/api/plantillas/${id}`,
-    delete: (id: number) => `/api/plantillas/${id}`,
-  },
-  dashboard: {
-    metricas: '/api/dashboard/metricas',
-  },
-  datos: {
-    importar: '/api/datos/importar',
-    exportar: '/api/datos/exportar',
-  },
-}
-```
-
-### 2.3 Sin código duplicado
-- Si un componente se repite 2+ veces → extraerlo a `src/components/ui/` o `src/components/modules/`
-- Si una lógica se repite en 2+ hooks → extraerla a `src/lib/utils/`
-- Si una validación se repite → usar el schema Zod de `src/lib/validators/`
-
-### 2.4 Tipos antes que código
-Antes de crear cualquier componente o servicio, verificar si el tipo ya existe en `src/types/`. Si no existe, crearlo ahí primero.
+### Objetivo
+Plataforma web CRM que gestione el ciclo comercial completo: desde la identificación de un prospecto hasta el cierre, con notificaciones, dashboards e importación/exportación de datos.
 
 ---
 
-## 3. Estructura del Proyecto
+## 2. Stack Tecnológico
 
-```
-src/
-├── app/                    # Next.js App Router (páginas solamente)
-│   ├── (auth)/             # Login, forgot-password, reset, activate
-│   └── (dashboard)/        # Todas las rutas protegidas con sidebar
-│
-├── components/
-│   ├── ui/                 # Átomos reutilizables (Button, Input, Modal...)
-│   ├── layout/             # Sidebar, Navbar, PageHeader
-│   └── modules/            # Componentes específicos por módulo
-│       ├── auth/
-│       ├── organizaciones/
-│       ├── contactos/
-│       ├── pipeline/
-│       ├── cotizaciones/
-│       ├── notificaciones/
-│       ├── plantillas/
-│       ├── dashboard/
-│       ├── datos/
-│       └── control-acceso/
-│
-├── hooks/                  # Custom hooks por dominio (llaman a services)
-├── services/
-│   ├── api/                # client.ts + endpoints.ts
-│   ├── mock/               # Data falsa por módulo
-│   └── modules/            # Servicios reales (switch mock/api aquí)
-│
-├── store/                  # Zustand: auth.store, ui.store
-├── types/                  # Interfaces y tipos TypeScript
-├── lib/
-│   ├── utils/              # Helpers puros (fechas, formato, csv)
-│   ├── constants/          # routes.ts, queryKeys.ts, config.ts
-│   └── validators/         # Schemas Zod por entidad
-└── styles/                 # globals.css, design tokens
-```
+| Capa | Tecnología |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Lenguaje | TypeScript |
+| Estilos | Tailwind CSS |
+| Estado global | Zustand |
+| Server state / caché | React Query (TanStack Query v5) |
+| Validación | Zod + React Hook Form |
+| Iconos | Lucide React |
+| Gráficas | Recharts |
+| Drag & Drop (Kanban) | @dnd-kit/core + @dnd-kit/sortable |
+| HTTP Client | Axios |
+| Runtime | Node.js v24 |
 
 ---
 
-## 4. Convenciones de Código
+## 3. Roles del Sistema
 
-### Nomenclatura
-| Elemento | Convención | Ejemplo |
-|---|---|---|
-| Componentes | PascalCase | `LeadCard.tsx` |
-| Hooks | camelCase + `use` | `useLeads.ts` |
-| Servicios | camelCase + `.service` | `leads.service.ts` |
-| Tipos | PascalCase + `.types` | `lead.types.ts` |
-| Schemas Zod | camelCase + `.schema` | `lead.schema.ts` |
-| Mocks | camelCase + `.mock` | `leads.mock.ts` |
-| Stores | camelCase + `.store` | `auth.store.ts` |
-| Utils | camelCase + `.utils` | `date.utils.ts` |
-| Constantes | UPPER_SNAKE_CASE | `USE_MOCK`, `BASE_URL` |
-
-### Componentes
-```tsx
-// ✅ Correcto: props tipadas, export named, sin lógica de negocio
-interface LeadCardProps {
-  lead: Lead
-  onMove?: (leadId: number, newState: LeadState) => void
-}
-
-export function LeadCard({ lead, onMove }: LeadCardProps) {
-  // Solo presentación
-}
-
-// ❌ Incorrecto: fetch dentro del componente, props sin tipo
-export default function LeadCard({ lead, onMove }) {
-  const data = await fetch('/api/leads') // NO
-}
-```
-
-### Hooks
-```ts
-// ✅ Correcto: usa React Query, llama al service, no al endpoint directo
-export function useLeads(filters?: LeadFilters) {
-  return useQuery({
-    queryKey: QUERY_KEYS.leads.list(filters),
-    queryFn: () => leadsService.getAll(filters),
-  })
-}
-```
-
-### Rutas centralizadas
-```ts
-// src/lib/constants/routes.ts
-export const ROUTES = {
-  auth: {
-    login:          '/login',
-    forgotPassword: '/forgot-password',
-    resetPassword:  '/reset-password',
-    activate:       '/activate',
-  },
-  dashboard:       '/dashboard',
-  organizaciones:  '/organizaciones',
-  organizacion:    (id: string) => `/organizaciones/${id}`,
-  contactos:       '/contactos',
-  contacto:        (id: number) => `/contactos/${id}`,
-  pipeline:        '/pipeline',
-  lead:            (id: number) => `/pipeline/${id}`,
-  cotizaciones:    '/cotizaciones',
-  cotizacion:      (id: number) => `/cotizaciones/${id}`,
-  notificaciones:  '/notificaciones',
-  plantillas:      '/plantillas',
-  datos:           '/datos',
-  controlAcceso:   '/control-acceso',
-}
-```
+| Rol | Descripción |
+|---|---|
+| **Administrador** | Acceso total. Único que puede gestionar usuarios (invitar, deshabilitar, asignar roles). Accede a todos los módulos. |
+| **Trabajador** | Usuario operativo. Gestiona organizaciones, contactos, leads, cotizaciones, notificaciones, dashboard, importación y exportación. NO accede a control de acceso. |
 
 ---
 
-## 5. ENUMs del Sistema
+## 4. Módulos y Estado
 
-Todos los ENUMs viven en `src/types/enums.ts`. **No redefinirlos en otro lugar.**
+| Módulo | Ruta | CU | Rol | Estado |
+|---|---|---|---|---|
+| 🔐 Login / Auth | `/login`, `/forgot-password`, `/reset-password`, `/activate` | CU001 | Público | ⏳ PENDIENTE |
+| 👥 Control de Acceso | `/control-acceso` | CU002 | Solo Administrador | ⏳ PENDIENTE |
+| 🏢 Organizaciones | `/organizaciones`, `/organizaciones/[id]` | CU003 | Ambos | ⏳ PENDIENTE |
+| 👤 Contactos | `/contactos`, `/contactos/[id]` | CU004 | Ambos | ⏳ PENDIENTE |
+| 📊 Pipeline / Leads | `/pipeline`, `/pipeline/[id]` | CU005 | Ambos | ⏳ PENDIENTE |
+| 💰 Cotizaciones | `/cotizaciones`, `/cotizaciones/[id]` | CU006 | Ambos | ⏳ PENDIENTE |
+| 🔔 Notificaciones | `/notificaciones` | CU007 | Ambos | ⏳ PENDIENTE |
+| 📈 Dashboard | `/dashboard` | CU008 | Ambos | ⏳ PENDIENTE |
+| 📥 Importar / Exportar | `/datos` | CU009, CU010 | Ambos | ⏳ PENDIENTE |
+| 📧 Plantillas de Correo | `/plantillas` | CU011 | Ambos | ⏳ PENDIENTE |
+
+**Estados posibles**: ⏳ PENDIENTE | 🚧 EN PROGRESO | ✅ LISTO
+
+---
+
+## 5. Descripción Detallada de Módulos
+
+### CU001 — Autenticación
+- Login con correo y contraseña
+- Generación de JWT token al autenticar
+- Recuperación de contraseña por correo (token con expiración)
+- Activación de cuenta por enlace (token de activación)
+- Validaciones: correo válido, usuario habilitado, contraseña hash
+- Mensajes de error específicos por caso
+
+### CU002 — Gestión de Usuarios (solo Administrador)
+- Invitar usuario por correo institucional con rol asignado
+- Envío de correo con token de activación
+- El usuario invitado define nombre, apellido y contraseña al activar
+- Deshabilitar usuarios activos
+- Listado y detalle de usuarios registrados
+
+### CU003 — Gestión de Organizaciones
+- Registrar, consultar y editar organizaciones
+- Identificación única por RUC (11 dígitos) o código interno único
+- Consulta automatizada a SUNAT por RUC o razón social (web scraping)
+- Autocompletado de campos desde SUNAT
+- Detalle muestra: info general, contactos asociados, historial de leads, historial de cotizaciones
+- Si tiene más de 6 contactos → botón "Ver todos" redirige a /contactos con filtro aplicado
+- Campos: nombre, nombre_comercial, sub_area, ruc, tipo, linkedin, ubicacion, sector, tamaño, actividad_economica, alianzas_estrategicas
+- No se elimina físicamente (RN-003)
+
+### CU004 — Gestión de Contactos
+- Registrar, consultar y editar contactos
+- Vinculación obligatoria a una organización existente
+- Correo principal único en todo el sistema
+- Campos: organización, vocativo, nombres, apellidos, cargo, correo, correo2, teléfono, comentarios
+- No se elimina físicamente (RN-003)
+
+### CU005 — Pipeline de Leads
+- Vista Kanban con columnas: En prospecto | Ofertado | Cierre con venta | Cierre sin venta
+- Drag & drop para cambiar estado entre columnas
+- Registro obligatorio de organización, opcional de contacto
+- Actividades de seguimiento por lead: Email, Reunión, Llamada, Otro
+- Estados de actividad: Pendiente, Completada
+- No se puede crear nueva actividad si la anterior está Pendiente (RN-008)
+- Historial de comentarios por actividad
+- Filtros por organización, estado, encargado, servicio
+- No se elimina físicamente (RN-003)
+
+### CU006 — Gestión de Cotizaciones
+- Vinculada obligatoriamente a un lead
+- Autocompletado de cliente, contacto y servicio desde el lead seleccionado
+- Estados: Pendiente, Enviada, Aceptada, Rechazada
+- Cotización Aceptada → lead pasa a "Cierre con venta" automáticamente
+- Cotización Rechazada → lead pasa a "Cierre sin venta" automáticamente
+- Antes de cerrar: verificar que el lead no tenga actividades Pendientes
+- Monto >= 0 (RF-0062)
+- Campos: fecha, dirigido, cliente, producto, remitente, nombre_servicio, monto, moneda, estado, observacion, link_propuesta
+- No se elimina físicamente (RN-003)
+
+### CU007 — Gestión de Notificaciones
+- Dos tipos: Recordatorio (solo interno al responsable) y Seguimiento (interno + externo al cliente)
+- Recordatorio: correo al responsable en fecha/hora definida
+- Seguimiento: correo interno al responsable → si no marca completado → correo externo al cliente
+- Usa plantillas de correo (CU011) con personalización sin modificar plantilla original
+- Secciones: Programadas y Vencidas
+- Canceladas: se eliminan, no se ejecutan, no aparecen en historial
+- Alerta automática si lead supera 30 días sin cambio de estado
+- Una sola notificación por actividad (RF-0061)
+
+### CU008 — Dashboard
+- Métricas: leads generados, % propuesta→cierre con venta, tiempo promedio cierre, tiempo en etapa propuesta, promedio acciones por lead, monto total pipeline, ingresos cerrados, % leads sin avance >30 días
+- Filtros: fecha inicio, fecha fin, tipo de servicio
+- Solo consulta, no modifica datos
+- Gráficas con Recharts
+
+### CU009 — Importación de Datos
+- Importar desde Excel (.xlsx, .xls, .csv)
+- Flujo en 3 etapas: Subir archivo → Preview y conflictos → Confirmar
+- Valida estructura, campos obligatorios, duplicados, relaciones
+- Muestra preview antes de confirmar
+- Registra historial de importación
+
+### CU010 — Exportación de Datos
+- Exportar organizaciones, contactos, leads o cotizaciones en CSV
+- Filtros por tipo de entidad:
+  - Organizaciones: sector, tamaño, tipo, departamento
+  - Contactos: organización asociada
+  - Leads: estado
+  - Cotizaciones: estado
+- No modifica datos
+
+### CU011 — Plantillas de Correo
+- Crear, editar, desactivar y eliminar plantillas
+- Campos: nombre (único), asunto, cuerpo, estado (activa/inactiva)
+- No se puede eliminar si está en uso en notificaciones activas → solo desactivar
+- Las plantillas activas aparecen en el selector de notificaciones
+
+---
+
+## 6. ENUMs del Sistema
+
+**Todos los ENUMs viven en `src/types/enums.ts`. No redefinirlos en otro lugar.**
 
 ```ts
 export enum RolUsuario      { Administrador = 'Administrador', Trabajador = 'Trabajador' }
@@ -255,120 +185,191 @@ export enum Sector          { Agroindustria = 'Agroindustria', Manufactura = 'Ma
 
 ---
 
-## 6. Control de Acceso por Rol
+## 7. Diccionario de Datos (Entidades Principales)
+
+### Usuarios
+`id, nombres, apellidos, rol(ENUM), estado(ENUM), correo(único), password(hash), created_at, updated_at`
+
+### Organizaciones
+`id(UUID), codigo_cliente(único), nombre(único), nombre_comercial, sub_area, ruc(11 chars), tipo(ENUM), linkedin, ubicacion, sector(ENUM), tamaño(ENUM), actividad_economica, alianzas_estrategicas, id_contacto_activo(FK), id_author(FK), created_at, updated_at`
+
+### Contactos
+`id, nombres, apellidos, vocativo(ENUM), cargo, correo(único), telefono, correo2, comentarios, id_organizacion(FK), id_author(FK), created_at, updated_at`
+
+### Leads
+`id, id_org(FK UUID), id_contacto(FK opcional), estado(ENUM), servicio_interes, comentarios, desafio_oportunidad, notas_contacto, id_encargado(FK), canal_captacion, id_author(FK), created_at, updated_at`
+
+### Actividades
+`id, id_lead(FK), id_responsable(FK), nombre_actividad, fecha_inicio, tipo(ENUM), estado(ENUM), fecha_fin, notas, outlook_event_id, outlook_imported, teamsMeetingUrl, seguimiento_automatico, id_author(FK), created_at, updated_at`
+
+### Cotizaciones
+`id, id_lead(FK), id_remitente(FK), fecha_cot, dirigido, cliente, producto, nombre_remitente, nombre_servicio, monto(DECIMAL≥0), tipo(ENUM moneda), estado(ENUM), observacion, link_propuesta, id_author(FK), created_at, updated_at`
+
+### Notificaciones
+`id, id_usuario(FK), id_actividad(FK), titulo, mensaje, estado(ENUM), created_at`
+
+### Templates Email
+`id, nombre(único), asunto, cuerpo, activo(bool), created_at, updated_at`
+
+### User Tokens
+`id, correo, token_hash(único), proposito(ENUM), id_usuario(FK), rol(ENUM), invitador_id(FK), estado(ENUM), expires_at, consumed_at, created_at`
+
+---
+
+## 8. Reglas de Negocio Críticas
+
+| Código | Regla | Impacto en Frontend |
+|---|---|---|
+| RN-001 | Sesión válida para todo acceso | Guard en layout (dashboard) |
+| RN-002 | Control por rol | Ocultar /control-acceso para Trabajador |
+| RN-003 | Sin borrado físico de org/contacto/lead/cotización | No mostrar botón eliminar, solo desactivar |
+| RN-004 | Sin RUC → código interno obligatorio | Validación condicional en OrganizacionForm |
+| RN-005 | Contacto vinculado a organización obligatoriamente | Validación en ContactoForm |
+| RN-006 | Lead vinculado a organización obligatoriamente | Validación en LeadForm |
+| RN-007 | Cotización Aceptada → lead Cierre con venta | Lógica en cotizaciones.service.ts |
+| RN-007 | Cotización Rechazada → lead Cierre sin venta | Lógica en cotizaciones.service.ts |
+| RN-008 | No nueva actividad si anterior está Pendiente | Bloquear ActividadForm |
+| RN-009 | Solo estados válidos del pipeline | Usar LeadState enum |
+| RN-013 | Una sola notificación por actividad | Verificar en RecordatorioForm/SeguimientoForm |
+| RF-0062 | Monto cotización >= 0 | Schema Zod cotizacion.schema.ts |
+
+---
+
+## 9. Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── (auth)/             # login, forgot-password, reset-password, activate
+│   └── (dashboard)/        # todas las rutas protegidas
+│
+├── components/
+│   ├── ui/                 # átomos: Button, Input, Select, Badge, Modal, Table, Card, Spinner, Toast, EmptyState
+│   ├── layout/             # Sidebar, Navbar, PageHeader
+│   └── modules/            # componentes por módulo
+│
+├── hooks/                  # custom hooks por dominio
+├── services/
+│   ├── api/client.ts       # Axios con interceptores
+│   ├── api/endpoints.ts    # TODAS las URLs aquí
+│   ├── mock/               # data falsa por módulo
+│   └── modules/            # servicios: switch mock ↔ API
+│
+├── store/                  # Zustand: auth.store, ui.store
+├── types/                  # interfaces + enums.ts
+└── lib/
+    ├── utils/              # date, format, validation, csv
+    ├── constants/          # routes.ts, queryKeys.ts, config.ts
+    └── validators/         # schemas Zod
+```
+
+---
+
+## 10. Patrón Mock → API
+
+El switch entre mock y API real se controla **únicamente** en `src/services/modules/*.service.ts`.
 
 ```ts
 // src/lib/constants/config.ts
-export const ADMIN_ONLY_ROUTES = [ROUTES.controlAcceso]
+export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-// src/app/(dashboard)/layout.tsx debe verificar:
-// - Si la ruta es ADMIN_ONLY y el usuario es Trabajador → redirigir
-// - Si no hay sesión → redirigir a login
-```
+// src/services/modules/leads.service.ts
+import { USE_MOCK } from '@/lib/constants/config'
+import { ENDPOINTS } from '@/services/api/endpoints'
+import { apiClient } from '@/services/api/client'
+import * as mock from '@/services/mock/leads.mock'
 
-Reglas de negocio de acceso:
-- `control-acceso` → solo `Administrador`
-- Resto de módulos → `Administrador` y `Trabajador`
-- El sidebar debe ocultar `control-acceso` para `Trabajador`
-
----
-
-## 7. Validaciones con Zod
-
-Cada entidad tiene su schema en `src/lib/validators/`. Se usa con `react-hook-form`.
-
-```ts
-// src/lib/validators/lead.schema.ts
-import { z } from 'zod'
-
-export const leadSchema = z.object({
-  id_org:           z.string().uuid('Organización requerida'),
-  id_contacto:      z.number().optional(),
-  servicio_interes: z.string().min(1, 'Campo obligatorio'),
-  estado:           z.nativeEnum(LeadState).default(LeadState.Prospecto),
-  comentarios:      z.string().max(500).optional(),
-  id_encargado:     z.number({ required_error: 'Encargado requerido' }),
-  canal_captacion:  z.string().max(60).optional(),
-})
-
-export type LeadFormValues = z.infer<typeof leadSchema>
-```
-
----
-
-## 8. Data Mock
-
-La data mock simula respuestas del backend. Debe ser **realista** (IDs, fechas, relaciones coherentes).
-
-```ts
-// src/services/mock/leads.mock.ts
-import { Lead, LeadState } from '@/types'
-
-export const MOCK_LEADS: Lead[] = [
-  {
-    id: 1,
-    id_org: 'uuid-org-1',
-    estado: LeadState.Prospecto,
-    servicio_interes: 'Formulación de proyecto I+D',
-    id_encargado: 1,
-    created_at: '2025-01-15T08:00:00Z',
-    updated_at: '2025-01-15T08:00:00Z',
-    // ...
+export const leadsService = {
+  getAll: async (filters?) => {
+    if (USE_MOCK) return mock.getLeads(filters)
+    return apiClient.get(ENDPOINTS.leads.list, { params: filters })
   },
-]
-
-export const getLeads = (filters?: any) => {
-  // Simular delay de red
-  return new Promise<Lead[]>((resolve) =>
-    setTimeout(() => resolve(MOCK_LEADS), 300)
-  )
 }
 ```
 
----
-
-## 9. Reglas de Negocio Implementadas en Frontend
-
-El frontend debe aplicar estas validaciones **antes** de llamar al backend:
-
-| Regla | Dónde implementar |
-|---|---|
-| RN-003: No borrado físico de org/contacto/lead/cotización | Deshabilitar botón eliminar, solo desactivar |
-| RN-007: Cotización aceptada → lead a Cierre con venta | En `cotizaciones.service.ts` post-save |
-| RN-007: Cotización rechazada → lead a Cierre sin venta | En `cotizaciones.service.ts` post-save |
-| RN-008: No nueva actividad si la anterior está Pendiente | Validar en `ActividadForm.tsx` antes de mostrar form |
-| RN-009: Solo estados válidos del pipeline | Usar `LeadState` enum, no strings libres |
-| RF-0062: Monto de cotización ≥ 0 | Schema Zod `cotizacion.schema.ts` |
-| RF-0061: Una sola notificación por actividad | Verificar en `RecordatorioForm` / `SeguimientoForm` |
-| RN-004: Sin RUC → código interno obligatorio | Lógica condicional en `OrganizacionForm.tsx` |
-| RN-005: Contacto sin organización → bloquear | Validación en `contacto.schema.ts` |
+**Integrar backend real = cambiar `NEXT_PUBLIC_USE_MOCK=false` en `.env.local`. Nada más.**
 
 ---
 
-## 10. Estilo Visual
+## 11. Variables de Entorno
 
-- **Framework CSS**: Tailwind CSS
-- **Design tokens**: `src/styles/themes/bioactiva.css`
-- **Paleta**: Verde institucional como color primario (BioActiva = innovación + naturaleza)
-- **Tipografía**: Variable en `globals.css`, nunca hardcodeada en componentes
-- **Componentes UI**: Construidos sobre `src/components/ui/`, no usar librerías externas de UI sin consenso del equipo
-- **Iconos**: Lucide React (`lucide-react`)
-- **Gráficas**: Recharts (dashboard)
-- **Drag & Drop (Kanban)**: `@dnd-kit/core`
+```bash
+# .env.local
+NEXT_PUBLIC_USE_MOCK=true
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+NEXT_PUBLIC_APP_NAME=BioActiva CRM
+```
 
 ---
 
-## 11. Skills del Proyecto
+## 12. Convención de Commits
+
+```
+feat: nueva funcionalidad
+fix: corrección de bug
+refactor: mejora de código sin cambio funcional
+style: cambios de estilos/UI
+chore: tareas de mantenimiento, dependencias
+docs: documentación
+```
+
+Ejemplos:
+```
+feat(auth): implement login form with JWT
+feat(organizaciones): add SUNAT search integration
+fix(pipeline): fix drag and drop state update
+refactor(cotizaciones): extract form validation to schema
+```
+
+---
+
+## 13. Skills Instaladas
+
+El proyecto tiene las siguientes skills activas (instaladas via autoskills):
+
+- `accessibility` — buenas prácticas de accesibilidad web
+- `seo` — optimización para motores de búsqueda
+- `frontend-design` — diseño de interfaces production-grade
+- `tailwind-css-patterns` — patrones avanzados de Tailwind
+- `react-hook-form` — formularios con validación
+- `zod` — validación de esquemas TypeScript
+- `nodejs-best-practices` — buenas prácticas Node.js
+- `react-best-practices` — patrones React modernos
+- `composition-patterns` — patrones de composición de componentes
+- `next-best-practices` — convenciones Next.js 16
+- `next-cache-components` — estrategias de caché en Next.js
+- `next-upgrade` — guía de migración y upgrades
+- `typescript-advanced-types` — tipos avanzados TypeScript
+- `nodejs-backend-patterns` — patrones de backend Node.js
+
+---
+
+## 14. Reglas Críticas (NO negociables)
+
+- ❌ Nunca hacer `fetch` o `axios` directamente en componentes o páginas
+- ❌ Nunca hardcodear URLs fuera de `endpoints.ts`
+- ❌ Nunca hardcodear rutas fuera de `routes.ts`
+- ❌ Nunca redefinir ENUMs fuera de `enums.ts`
+- ❌ Nunca usar `any` sin justificación documentada
+- ❌ Nunca crear tipos inline en componentes si ya existen en `src/types/`
+- ❌ Nunca importar con rutas relativas largas (`../../../../`); usar alias `@/`
+- ❌ Nunca poner lógica de negocio en componentes de `src/components/ui/`
+- ❌ Nunca eliminar físicamente organizaciones, contactos, leads o cotizaciones (RN-003)
+- ❌ Nunca crear archivos de prueba, scratch, temp o demo en el proyecto
+
+---
+
+## 15. Skills del Equipo
 
 ### skill:mock-to-api
 Cuando el backend entregue un endpoint:
-1. Agregar la URL en `src/services/api/endpoints.ts`
-2. Actualizar `src/services/modules/[modulo].service.ts` — el bloque `if (USE_MOCK)`
-3. Probar con `USE_MOCK=false` en `.env.local`
+1. Agregar URL en `src/services/api/endpoints.ts`
+2. Actualizar `src/services/modules/[modulo].service.ts`
+3. Probar con `NEXT_PUBLIC_USE_MOCK=false`
 4. No tocar componentes, hooks ni páginas
 
 ### skill:nuevo-modulo
-Para agregar un nuevo módulo al CRM:
 1. Crear `src/app/(dashboard)/[modulo]/page.tsx`
 2. Crear tipos en `src/types/[modulo].types.ts`
 3. Crear schema Zod en `src/lib/validators/[modulo].schema.ts`
@@ -382,74 +383,14 @@ Para agregar un nuevo módulo al CRM:
 11. Agregar ítem al Sidebar si corresponde
 
 ### skill:nuevo-componente-ui
-Para agregar un componente base reutilizable:
 1. Crear carpeta `src/components/ui/[Nombre]/`
 2. Archivos: `[Nombre].tsx`, `[Nombre].types.ts`, `index.ts`
 3. Exportar desde `src/components/ui/index.ts`
-4. Nunca incluir lógica de negocio ni llamadas a servicios
+4. Sin lógica de negocio ni llamadas a servicios
 
 ### skill:validacion-formulario
-Para formularios con validación:
-1. Definir o reutilizar schema Zod en `src/lib/validators/`
+1. Definir schema Zod en `src/lib/validators/`
 2. Usar `react-hook-form` con `zodResolver`
-3. Mostrar errores inline, no como toast
+3. Errores inline, no como toast
 4. Toast solo para éxito o error de red
-
----
-
-## 12. React Query Keys
-
-```ts
-// src/lib/constants/queryKeys.ts
-export const QUERY_KEYS = {
-  auth:            { me: ['auth', 'me'] },
-  usuarios:        { list: ['usuarios'] },
-  organizaciones:  {
-    list:   (f?: any) => ['organizaciones', 'list', f],
-    detail: (id: string) => ['organizaciones', id],
-  },
-  contactos:       {
-    list:   (f?: any) => ['contactos', 'list', f],
-    detail: (id: number) => ['contactos', id],
-  },
-  leads:           {
-    list:     (f?: any) => ['leads', 'list', f],
-    pipeline: () => ['leads', 'pipeline'],
-    detail:   (id: number) => ['leads', id],
-  },
-  actividades:     { byLead: (leadId: number) => ['actividades', leadId] },
-  cotizaciones:    {
-    list:   (f?: any) => ['cotizaciones', 'list', f],
-    detail: (id: number) => ['cotizaciones', id],
-  },
-  notificaciones:  { list: (f?: any) => ['notificaciones', 'list', f] },
-  plantillas:      { list: () => ['plantillas'] },
-  dashboard:       { metricas: (f?: any) => ['dashboard', 'metricas', f] },
-}
-```
-
----
-
-## 13. Variables de Entorno
-
-```bash
-# .env.example
-NEXT_PUBLIC_USE_MOCK=true                     # true → mock | false → API real
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001 # URL del backend NestJS
-NEXT_PUBLIC_APP_NAME=BioActiva CRM
-```
-
----
-
-## 14. Lo que NO hacer
-
-- ❌ Nunca hacer `fetch` o `axios` directamente en componentes o páginas
-- ❌ Nunca hardcodear URLs fuera de `endpoints.ts`
-- ❌ Nunca hardcodear rutas fuera de `routes.ts`
-- ❌ Nunca redefinir ENUMs fuera de `enums.ts`
-- ❌ Nunca usar `any` sin justificación documentada
-- ❌ Nunca crear tipos inline en componentes si ya existen en `src/types/`
-- ❌ Nunca importar desde rutas relativas largas (`../../../../`); usar alias `@/`
-- ❌ Nunca poner lógica de negocio en componentes UI de `src/components/ui/`
-- ❌ Nunca eliminar físicamente organizaciones, contactos, leads o cotizaciones (RN-003)
 <!-- END:nextjs-agent-rules -->

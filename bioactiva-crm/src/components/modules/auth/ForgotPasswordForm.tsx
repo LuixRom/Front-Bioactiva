@@ -1,0 +1,124 @@
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react'
+import Link from 'next/link'
+import { forgotPasswordSchema, ForgotPasswordFormValues } from '@/lib/validators/auth.schema'
+import { useAuth } from '@/hooks/auth/useAuth'
+import { ROUTES } from '@/lib/constants/routes'
+
+export function ForgotPasswordForm() {
+    const { forgotPassword, isLoading, error, success } = useAuth()
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<ForgotPasswordFormValues>({
+        resolver: zodResolver(forgotPasswordSchema),
+    })
+
+    const onSubmit = async (data: ForgotPasswordFormValues) => {
+        await forgotPassword(data)
+    }
+
+    return (
+        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1C7E3C] via-[#1C7E3C]/90 to-[#BCF7B3]">
+
+            <div className="absolute top-[-80px] left-[-80px] w-72 h-72 rounded-full bg-white/10 blur-sm" />
+            <div className="absolute bottom-[-60px] right-[-60px] w-64 h-64 rounded-full bg-white/10 blur-sm" />
+            <div className="absolute top-1/2 left-[-120px] w-80 h-80 rounded-full bg-white/5" />
+
+
+            <div className="relative z-10 w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl">
+
+
+                <div className="bg-[#1C7E3C] px-8 py-6 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+                            <path d="M17 8C8 10 5.9 16.17 3.82 19.54a1 1 0 001.66 1.06C7 18.8 9.62 17 12 17c4 0 5-2 5-2s-1 2-1 6h2c0-4 1.5-6 3-6s2 1 2 3h2c0-3-1.5-5-3-5s-3 1.3-3 2c0 0 1-4-2-7z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-white text-xl font-bold">Bioactiva CRM</h1>
+                </div>
+
+                <div className="bg-white px-8 py-8 space-y-5">
+                    <div>
+                        <h2 className="text-gray-900 text-xl font-bold">Recuperar contraseña</h2>
+                        <p className="text-gray-500 text-sm mt-1">
+                            Ingresa tu correo y te enviaremos un enlace de recuperación.
+                        </p>
+                    </div>
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+                            {error}
+                        </div>
+                    )}
+
+                    {success ? (
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3 bg-[#F1FFEC] border border-[#BCF7B3] text-[#1C7E3C] text-sm rounded-lg px-4 py-3">
+                                <CheckCircle size={18} className="mt-0.5 shrink-0" />
+                                <p>{success}</p>
+                            </div>
+                            <p className="text-sm text-gray-500 text-center">
+                                Revisa tu bandeja de entrada y sigue las instrucciones.
+                            </p>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                            <div className="space-y-1.5">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                    Correo electrónico
+                                </label>
+                                <input
+                                    type="email"
+                                    autoComplete="email"
+                                    placeholder="correo@bioactiva.pe"
+                                    {...register('correo')}
+                                    className={`w-full px-4 py-3 text-gray-900 placeholder:text-gray-400 rounded-xl border-2 text-sm outline-none transition-colors bg-[#F1FFEC]
+                    ${errors.correo
+                                            ? 'border-red-400 focus:border-red-500'
+                                            : 'border-[#BCF7B3] focus:border-[#1C7E3C]'
+                                        }`}
+                                />
+                                {errors.correo && (
+                                    <p className="text-red-500 text-xs">{errors.correo.message}</p>
+                                )}
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full flex items-center justify-center gap-2 bg-[#1C7E3C] hover:bg-[#16642f]
+                  disabled:bg-[#BCF7B3] disabled:cursor-not-allowed text-white font-semibold
+                  py-3 px-4 rounded-xl text-sm transition-colors shadow-md shadow-[#BCF7B3]"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin" />
+                                        Enviando...
+                                    </>
+                                ) : (
+                                    'Enviar enlace'
+                                )}
+                            </button>
+                        </form>
+                    )}
+
+                    <div className="text-center">
+                        <Link
+                            href={ROUTES.auth.login}
+                            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#1C7E3C] transition-colors"
+                        >
+                            <ArrowLeft size={14} />
+                            Volver al inicio de sesión
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

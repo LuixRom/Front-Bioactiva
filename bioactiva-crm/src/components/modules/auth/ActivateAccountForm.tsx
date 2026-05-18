@@ -6,42 +6,45 @@ import { Eye, EyeOff, Loader2, CheckCircle, XCircle, ArrowLeft } from 'lucide-re
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { resetPasswordSchema, ResetPasswordFormValues } from '@/lib/validators/auth.schema'
+import { activateAccountSchema, ActivateAccountFormValues } from '@/lib/validators/auth.schema'
 import { useAuth } from '@/hooks/auth/useAuth'
 import { ROUTES } from '@/lib/constants/routes'
 
-export function ResetPasswordForm() {
+export function ActivateAccountForm() {
     const searchParams = useSearchParams()
     const token = searchParams.get('token') ?? ''
-    const { validateToken, resetPassword, isLoading, error, success } = useAuth()
+    const { validateToken, activateAccount, isLoading, error, success } = useAuth()
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [tokenValido, setTokenValido] = useState<boolean | null>(null)
     const [tokenMensaje, setTokenMensaje] = useState('')
     const [validandoToken, setValidandoToken] = useState(true)
+    const [correoInvitado, setCorreoInvitado] = useState('')
 
-    const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordFormValues>({
-        resolver: zodResolver(resetPasswordSchema),
+    const { register, handleSubmit, formState: { errors } } = useForm<ActivateAccountFormValues>({
+        resolver: zodResolver(activateAccountSchema),
     })
 
     useEffect(() => {
         const verificar = async () => {
             if (!token) {
                 setTokenValido(false)
-                setTokenMensaje('El enlace no es válido.')
+                setTokenMensaje('El enlace de activación no es válido.')
                 setValidandoToken(false)
                 return
             }
             const result = await validateToken(token)
             setTokenValido(result.valid)
             setTokenMensaje(result.message ?? '')
+            if (result.correo) setCorreoInvitado(result.correo)
             setValidandoToken(false)
         }
         verificar()
+
     }, [token])
 
-    const onSubmit = async (data: ResetPasswordFormValues) => {
-        await resetPassword(token, data)
+    const onSubmit = async (data: ActivateAccountFormValues) => {
+        await activateAccount(token, data)
     }
 
     return (
@@ -64,14 +67,16 @@ export function ResetPasswordForm() {
 
                 <div className="bg-white px-8 py-8 space-y-5">
                     <div>
-                        <h2 className="text-gray-900 text-xl font-bold">Nueva contraseña</h2>
-                        <p className="text-gray-500 text-sm mt-1">Define tu nueva contraseña de acceso</p>
+                        <h2 className="text-gray-900 text-xl font-bold">Activar cuenta</h2>
+                        <p className="text-gray-500 text-sm mt-1">
+                            Completa tu información para activar tu acceso al CRM
+                        </p>
                     </div>
 
                     {validandoToken && (
                         <div className="flex items-center justify-center gap-2 py-6 text-gray-500 text-sm">
                             <Loader2 size={16} className="animate-spin" />
-                            Validando enlace...
+                            Validando enlace de activación...
                         </div>
                     )}
 
@@ -81,17 +86,23 @@ export function ResetPasswordForm() {
                                 <XCircle size={18} className="mt-0.5 shrink-0" />
                                 <p>{tokenMensaje || 'El enlace no es válido o ha expirado.'}</p>
                             </div>
-                            <Link
-                                href={ROUTES.auth.forgotPassword}
-                                className="block text-center text-sm text-[#1C7E3C] hover:underline"
-                            >
-                                Solicitar un nuevo enlace
-                            </Link>
+                            <p className="text-sm text-gray-500 text-center">
+                                Contacta al administrador para recibir una nueva invitación.
+                            </p>
                         </div>
                     )}
 
                     {!validandoToken && tokenValido && (
                         <>
+                            {correoInvitado && (
+                                <div className="bg-[#F1FFEC] border border-[#BCF7B3] rounded-xl px-4 py-3">
+                                    <p className="text-xs text-[#1C7E3C] font-semibold uppercase tracking-wide">
+                                        Cuenta a activar
+                                    </p>
+                                    <p className="text-sm text-[#1C7E3C] font-bold mt-0.5">{correoInvitado}</p>
+                                </div>
+                            )}
+
                             {error && (
                                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
                                     {error}
@@ -107,10 +118,38 @@ export function ResetPasswordForm() {
                                     <p className="text-sm text-gray-500 text-center">Redirigiendo al login...</p>
                                 </div>
                             ) : (
-                                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                            Nueva contraseña
+                                            Nombres <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ingresa tus nombres"
+                                            {...register('nombres')}
+                                            className={`w-full px-4 py-3 text-gray-900 placeholder:text-gray-400 rounded-xl border-2 text-sm outline-none transition-colors bg-[#F1FFEC]
+                        ${errors.nombres ? 'border-red-400' : 'border-[#BCF7B3] focus:border-[#1C7E3C]'}`}
+                                        />
+                                        {errors.nombres && <p className="text-red-500 text-xs">{errors.nombres.message}</p>}
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                            Apellidos <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ingresa tus apellidos"
+                                            {...register('apellidos')}
+                                            className={`w-full px-4 py-3 text-gray-900 placeholder:text-gray-400 rounded-xl border-2 text-sm outline-none transition-colors bg-[#F1FFEC]
+                        ${errors.apellidos ? 'border-red-400' : 'border-[#BCF7B3] focus:border-[#1C7E3C]'}`}
+                                        />
+                                        {errors.apellidos && <p className="text-red-500 text-xs">{errors.apellidos.message}</p>}
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                            Contraseña <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
                                             <input
@@ -133,7 +172,7 @@ export function ResetPasswordForm() {
 
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                            Confirmar contraseña
+                                            Confirmar contraseña <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
                                             <input
@@ -169,9 +208,9 @@ export function ResetPasswordForm() {
                       py-3 px-4 rounded-xl text-sm transition-colors shadow-md shadow-[#BCF7B3]"
                                     >
                                         {isLoading ? (
-                                            <><Loader2 size={16} className="animate-spin" />Guardando...</>
+                                            <><Loader2 size={16} className="animate-spin" />Activando cuenta...</>
                                         ) : (
-                                            'Guardar nueva contraseña'
+                                            'Activar cuenta'
                                         )}
                                     </button>
                                 </form>
