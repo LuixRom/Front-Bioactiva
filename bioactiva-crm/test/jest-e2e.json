@@ -1,0 +1,21 @@
+{
+  "displayName": "e2e",
+  "preset": "ts-jest",
+  "testEnvironment": "jsdom",
+  "rootDir": "../",
+  "roots": ["<rootDir>/test"],
+  "testRegex": ".*\\.e2e-spec\\.tsx?$",
+  "moduleFileExtensions": ["js", "json", "ts", "tsx"],
+  "transform": {
+    "^.+\\.(t|j)sx?$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "collectCoverageFrom": [
+    "src/**/*.{ts,tsx}",
+    "!src/**/*.d.ts",
+    "!src/**/*.stories.tsx",
+    "!src/**/index.ts"
+  ]
+}
