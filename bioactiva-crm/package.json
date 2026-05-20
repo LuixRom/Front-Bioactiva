@@ -22,6 +22,9 @@
       "tsx"
     ],
     "rootDir": ".",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
     "testRegex": ".*\\.(e2e-spec|spec|test)\\.(ts|tsx|js)$",
     "transform": {
       "^.+\\.(t|j)sx?$": "ts-jest"
