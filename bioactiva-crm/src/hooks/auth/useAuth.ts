@@ -1,15 +1,23 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth.store'
 import { authService } from '@/services/modules/auth.service'
 import { ROUTES } from '@/lib/constants/routes'
-import { USE_MOCK } from '@/lib/constants/config'
+import { RolUsuario, EstadoUsuario } from '@/types/enums'
 import {
     LoginFormValues,
     ForgotPasswordFormValues,
     ResetPasswordFormValues,
     ActivateAccountFormValues,
 } from '@/lib/validators/auth.schema'
+
+function extractMessage(err: unknown, fallback: string): string {
+    if (err instanceof Error) return err.message
+    if (typeof err === 'object' && err !== null && 'message' in err) {
+        return String((err as { message: unknown }).message)
+    }
+    return fallback
+}
 
 export function useAuth() {
     const router = useRouter()
@@ -25,10 +33,11 @@ export function useAuth() {
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
 
-    const resetMessages = () => {
+    const resetMessages = useCallback(() => {
         setError(null)
         setSuccess(null)
-    }
+    }, [])
+
     const login = async (data: LoginFormValues) => {
         try {
             resetMessages()
@@ -38,6 +47,7 @@ export function useAuth() {
 
             if (typeof window !== 'undefined') {
                 localStorage.setItem('bioactiva_token', accessToken)
+                document.cookie = `bioactiva_token=${accessToken}; path=/; max-age=${8 * 60 * 60}; SameSite=Strict`
             }
 
             let usuario
@@ -50,21 +60,20 @@ export function useAuth() {
                     nombres: 'Usuario',
                     apellidos: '',
                     correo: data.correo,
-                    rol: 'Trabajador' as any,
-                    estado: 'Activo' as any,
+                    rol: RolUsuario.Trabajador,
+                    estado: EstadoUsuario.Activo,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                 }
             }
 
-
             setSession(accessToken, usuario)
             router.push(ROUTES.dashboard)
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('bioactiva_token')
             }
-            setError(err?.message as string ?? 'Error al iniciar sesión. Intente nuevamente.')
+            setError(extractMessage(err, 'Error al iniciar sesión. Intente nuevamente.'))
         } finally {
             setIsLoading(false)
         }
@@ -75,6 +84,9 @@ export function useAuth() {
             await authService.logout()
         } catch {
         } finally {
+            if (typeof window !== 'undefined') {
+                document.cookie = 'bioactiva_token=; path=/; max-age=0; SameSite=Strict'
+            }
             clearSession()
             router.push(ROUTES.auth.login)
         }
@@ -88,27 +100,27 @@ export function useAuth() {
             await authService.forgotPassword(data.correo)
 
             setSuccess('Correo de recuperación enviado correctamente.')
-        } catch (err: any) {
-            setError(err?.message ?? 'Error al enviar el correo. Intente nuevamente.')
+        } catch (err: unknown) {
+            setError(extractMessage(err, 'Error al enviar el correo. Intente nuevamente.'))
         } finally {
             setIsLoading(false)
         }
     }
 
-    const validateToken = async (token: string) => {
+    const validateToken = useCallback(async (token: string) => {
         try {
             resetMessages()
             setIsLoading(true)
 
             const response = await authService.validateToken(token)
             return response
-        } catch (err: any) {
-            setError(err?.message ?? 'Error al validar el token. Intente nuevamente.')
+        } catch (err: unknown) {
+            setError(extractMessage(err, 'Error al validar el token. Intente nuevamente.'))
             return { valid: false }
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [resetMessages])
 
     const resetPassword = async (token: string, data: ResetPasswordFormValues) => {
         try {
@@ -119,8 +131,8 @@ export function useAuth() {
 
             setSuccess('Contraseña restablecida correctamente. Ya puede iniciar sesión.')
             setTimeout(() => router.push(ROUTES.auth.login), 2000)
-        } catch (err: any) {
-            setError(err?.message ?? 'Error al restablecer la contraseña. Intente nuevamente.')
+        } catch (err: unknown) {
+            setError(extractMessage(err, 'Error al restablecer la contraseña. Intente nuevamente.'))
         } finally {
             setIsLoading(false)
         }
@@ -136,12 +148,13 @@ export function useAuth() {
             setSuccess('Cuenta activada correctamente. Redirigiendo...')
 
             setTimeout(() => router.push(ROUTES.auth.login), 2000)
-        } catch (err: any) {
-            setError(err?.message ?? 'Error al activar la cuenta. Intente nuevamente.')
+        } catch (err: unknown) {
+            setError(extractMessage(err, 'Error al activar la cuenta. Intente nuevamente.'))
         } finally {
             setIsLoading(false)
         }
     }
+
     return {
         isLoading,
         error,

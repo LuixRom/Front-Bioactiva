@@ -15,10 +15,12 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     const router = useRouter()
-    const { isAuthenticated, usuario, accessToken, setSession, clearSession } = useAuthStore()
+    const { isAuthenticated, usuario, accessToken, setSession, clearSession, _hasHydrated } = useAuthStore()
     const { sidebarCollapsed, sidebarOpen } = useUIStore()
 
     useEffect(() => {
+        if (!_hasHydrated) return
+
         if (!isAuthenticated || !accessToken) {
             router.replace(ROUTES.auth.login)
             return
@@ -34,8 +36,9 @@ export default function DashboardLayout({
                     router.replace(ROUTES.auth.login)
                 })
         }
-    }, [isAuthenticated, accessToken, usuario, router, setSession, clearSession])
+    }, [_hasHydrated, isAuthenticated, accessToken, usuario, router, setSession, clearSession])
 
+    if (!_hasHydrated) return null
     if (!isAuthenticated || !accessToken) return null
 
     return (
