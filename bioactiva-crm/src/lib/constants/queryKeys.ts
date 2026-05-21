@@ -15,9 +15,9 @@ export const QUERY_KEYS = {
     },
 
     contactos: {
-        list: (filters?: Record<string, unknown>) => ['contactos', 'list', filters],
-        detail: (id: number) => ['contactos', id],
-        byOrganizacion: (orgId: string) => ['contactos', 'org', orgId]
+      list:           (filters?: unknown) => ['contactos', 'list', filters],
+      detail:         (id: number) => ['contactos', id],
+      byOrganizacion: (orgId: string) => ['contactos', 'org', orgId],
     },
 
     leads: {
