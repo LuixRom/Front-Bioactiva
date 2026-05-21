@@ -1,20 +1,4 @@
 services:
-  bioactiva-frontend-prod:
-    profiles:
-      - prod
-    container_name: bioactiva-frontend
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: ${BACKEND_URL}
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: ${BACKEND_URL}
-      PORT: 3000
-    ports:
-      - "3000:3000"
-    restart: unless-stopped
-
   bioactiva-frontend-local:
     profiles:
       - local
@@ -25,10 +9,28 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        NEXT_PUBLIC_USE_MOCK: ${NEXT_PUBLIC_USE_MOCK:-true}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Bioactiva CRM}
     environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
-      PORT: 3000
+      PORT: 4000
     ports:
-      - "3000:3000"
+      - "4000:4000"
+    restart: unless-stopped
+
+  bioactiva-frontend-prod:
+    profiles:
+      - prod
+    container_name: bioactiva-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_USE_MOCK: ${NEXT_PUBLIC_USE_MOCK:-false}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Bioactiva CRM}
+    environment:
+      PORT: 4000
+    ports:
+      - "4000:4000"
     restart: unless-stopped
