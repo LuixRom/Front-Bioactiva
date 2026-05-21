@@ -65,7 +65,7 @@ pipeline {
             steps {
 
                 withCredentials([
-                    string(credentialsId: 'BACKEND_URL', variable: 'BACKEND_URL')
+                    string(credentialsId: 'BACKEND_BIOACTIVA', variable: 'BACKEND_BIOACTIVA')
                 ]) {
 
                     sh '''
