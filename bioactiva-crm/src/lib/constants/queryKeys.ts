@@ -32,7 +32,7 @@ export const QUERY_KEYS = {
     },
 
     cotizaciones: {
-        list: (filters?: Record<string, unknown>) => ['cotizaciones', 'list', filters],
+        list:   (filters?: unknown) => ['cotizaciones', 'list', filters],
         detail: (id: number) => ['cotizaciones', id],
         byLead: (leadId: number) => ['cotizaciones', 'lead', leadId],
     },
