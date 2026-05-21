@@ -5,6 +5,9 @@ import { Usuario, AuthState } from '@/types/auth.types'
 import { RolUsuario } from '@/types/enums'
 
 interface AuthStore extends AuthState {
+    _hasHydrated: boolean
+    _setHasHydrated: (value: boolean) => void
+
     setSession: (accessToken: string, usuario: Usuario) => void
     updateToken: (accessToken: string) => void
     clearSession: () => void
@@ -21,6 +24,9 @@ export const useAuthStore = create<AuthStore>()(
             accessToken: null,
             isAuthenticated: false,
             isLoading: false,
+            _hasHydrated: false,
+
+            _setHasHydrated: (value) => set({ _hasHydrated: value }),
 
             setSession: (accessToken, usuario) => {
                 if (typeof window !== 'undefined') {
@@ -65,6 +71,9 @@ export const useAuthStore = create<AuthStore>()(
                 usuario: state.usuario,
                 isAuthenticated: state.isAuthenticated,
             }),
+            onRehydrateStorage: () => (state) => {
+                state?._setHasHydrated(true)
+            },
         }
     )
 )
