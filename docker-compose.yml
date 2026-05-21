@@ -1,0 +1,31 @@
+services:
+  bioactiva-frontend:
+    container_name: bioactiva-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${BACKEND_URL}
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${BACKEND_URL}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  bioactiva-frontend-local:
+    profiles: ["local"]
+    container_name: bioactiva-frontend-local
+    env_file:
+      - ./.env
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
