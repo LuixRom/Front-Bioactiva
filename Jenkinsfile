@@ -24,7 +24,7 @@ pipeline {
             steps {
                 sh '''
                     cd bioactiva-crm
-                    npm ci
+                    npm install
                     npm run test:cov
                 '''
             }
