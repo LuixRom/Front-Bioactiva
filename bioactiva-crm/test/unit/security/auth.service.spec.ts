@@ -40,18 +40,18 @@ describe('security/auth.service', () => {
   })
 
   it('posts login requests to the auth endpoint', async () => {
-    postMock.mockResolvedValueOnce({ data: { token: 'token-123', usuario: { id: 1 } } })
+    postMock.mockResolvedValueOnce({ data: { accessToken: 'token-123' } })
 
     const response = await authService.login({
       correo: 'admin@bioactiva.pe',
       password: 'Secret123!',
     })
 
-    expect(postMock).toHaveBeenCalledWith('/api/auth/login', {
+    expect(postMock).toHaveBeenCalledWith('/auth/login', {
       correo: 'admin@bioactiva.pe',
       password: 'Secret123!',
     })
-    expect(response).toEqual({ token: 'token-123', usuario: { id: 1 } })
+    expect(response).toEqual({ accessToken: 'token-123' })
   })
 
   it('gets token validation from the dynamic endpoint', async () => {
@@ -59,15 +59,15 @@ describe('security/auth.service', () => {
 
     const response = await authService.validateToken('token-abc')
 
-    expect(getMock).toHaveBeenCalledWith('/api/auth/validate-token/token-abc')
+    expect(getMock).toHaveBeenCalledWith('/auth/validate-token/token-abc')
     expect(response).toEqual({ valid: true, correo: 'admin@bioactiva.pe' })
   })
 
-  it('calls logout endpoint', async () => {
-    postMock.mockResolvedValueOnce({})
+  it('does not call API on logout (no-op)', async () => {
+    postMock.mockResolvedValue({})
 
     await authService.logout()
 
-    expect(postMock).toHaveBeenCalledWith('/api/auth/logout')
+    expect(postMock).not.toHaveBeenCalled()
   })
 })

@@ -15,9 +15,10 @@ describe('security/auth.store', () => {
   beforeEach(() => {
     useAuthStore.setState({
       usuario: null,
-      token: null,
+      accessToken: null,
       isAuthenticated: false,
       isLoading: false,
+      _hasHydrated: false,
     })
     localStorage.clear()
   })
@@ -36,7 +37,7 @@ describe('security/auth.store', () => {
 
     useAuthStore.getState().setSession('token-123', usuario)
 
-    expect(useAuthStore.getState().token).toBe('token-123')
+    expect(useAuthStore.getState().accessToken).toBe('token-123')
     expect(useAuthStore.getState().usuario).toEqual(usuario)
     expect(useAuthStore.getState().isAuthenticated).toBe(true)
     expect(localStorage.getItem('bioactiva_token')).toBe('token-123')
@@ -49,7 +50,7 @@ describe('security/auth.store', () => {
 
     useAuthStore.getState().clearSession()
 
-    expect(useAuthStore.getState().token).toBeNull()
+    expect(useAuthStore.getState().accessToken).toBeNull()
     expect(useAuthStore.getState().usuario).toBeNull()
     expect(useAuthStore.getState().isAuthenticated).toBe(false)
     expect(localStorage.getItem('bioactiva_token')).toBeNull()
