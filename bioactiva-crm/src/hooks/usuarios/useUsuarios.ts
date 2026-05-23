@@ -4,15 +4,12 @@ import { useState, useCallback } from 'react'
 import { usuariosService } from '@/services/modules/usuarios.service'
 import {
     UsuarioListItem,
-    Invitacion,
-    InvitarUsuarioRequest,
     EditarUsuarioRequest,
     CambiarPasswordRequest,
 } from '@/types/usuario.types'
 
 interface UsuariosState {
     usuarios: UsuarioListItem[]
-    invitaciones: Invitacion[]
     total: number
     activos: number
     isLoading: boolean
@@ -31,7 +28,6 @@ function extractMessage(err: unknown, fallback: string): string {
 export function useUsuarios() {
     const [state, setState] = useState<UsuariosState>({
         usuarios: [],
-        invitaciones: [],
         total: 0,
         activos: 0,
         isLoading: false,
@@ -46,16 +42,12 @@ export function useUsuarios() {
     const cargar = useCallback(async () => {
         try {
             setState(prev => ({ ...prev, isLoading: true, error: null }))
-            const [usuariosRes, invitacionesRes] = await Promise.all([
-                usuariosService.getUsuarios(),
-                usuariosService.getInvitaciones(),
-            ])
+            const res = await usuariosService.getUsuarios()
             setState(prev => ({
                 ...prev,
-                usuarios: usuariosRes.usuarios,
-                total: usuariosRes.total,
-                activos: usuariosRes.activos,
-                invitaciones: invitacionesRes,
+                usuarios: res.usuarios,
+                total: res.total,
+                activos: res.activos,
                 isLoading: false,
             }))
         } catch (err: unknown) {
@@ -66,23 +58,6 @@ export function useUsuarios() {
             }))
         }
     }, [])
-
-    const invitar = useCallback(async (data: InvitarUsuarioRequest): Promise<boolean> => {
-        try {
-            setState(prev => ({ ...prev, isLoading: true, error: null }))
-            const res = await usuariosService.invitar(data)
-            await cargar()
-            setState(prev => ({ ...prev, isLoading: false, successMessage: res.message }))
-            return true
-        } catch (err: unknown) {
-            setState(prev => ({
-                ...prev,
-                isLoading: false,
-                error: extractMessage(err, 'Error al enviar invitación.'),
-            }))
-            return false
-        }
-    }, [cargar])
 
     const editar = useCallback(async (data: EditarUsuarioRequest): Promise<boolean> => {
         try {
@@ -154,7 +129,6 @@ export function useUsuarios() {
     return {
         ...state,
         cargar,
-        invitar,
         editar,
         cambiarPassword,
         deshabilitar,

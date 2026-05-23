@@ -11,12 +11,18 @@ export const ENDPOINTS = {
     },
     usuarios: {
         list: '/api/usuarios',
-        invitaciones: '/api/usuarios/invitaciones',
         detail: (id: number) => `/api/usuarios/${id}`,
-        invite: '/api/usuarios/invite',
         cambiarPassword: (id: number) => `/api/usuarios/${id}/password`,
         disable: (id: number) => `/api/usuarios/${id}/disable`,
         enable: (id: number) => `/api/usuarios/${id}/enable`,
+    },
+
+    invitaciones: {
+        list: '/invitations',
+        create: '/invitations',
+        info: (token: string) => `/invitations/info/${token}`,
+        accept: '/invitations/accept',
+        revoke: (id: number) => `/invitations/${id}`,
     },
 
     organizaciones: {
@@ -89,4 +95,3 @@ export const ENDPOINTS = {
         historial: '/api/datos/historial'
     },
 } as const
-
