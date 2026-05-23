@@ -2,7 +2,7 @@ import { RolUsuario, EstadoUsuario } from '@/types/enums'
 import { UsuarioRaw, Usuario } from '@/types/auth.types'
 
 export const mapRole = (role: number): RolUsuario => {
-    return role == 1 ? RolUsuario.Administrador : RolUsuario.Trabajador
+    return role === 0 ? RolUsuario.Administrador : RolUsuario.Trabajador
 }
 
 export const mapEstado = (estado: number): EstadoUsuario => {

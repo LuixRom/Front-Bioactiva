@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth.store'
@@ -10,6 +12,7 @@ import {
     ResetPasswordFormValues,
     ActivateAccountFormValues,
 } from '@/lib/validators/auth.schema'
+import { ValidateTokenResult } from '@/types/auth.types'
 
 function extractMessage(err: unknown, fallback: string): string {
     if (err instanceof Error) return err.message
@@ -17,6 +20,16 @@ function extractMessage(err: unknown, fallback: string): string {
         return String((err as { message: unknown }).message)
     }
     return fallback
+}
+
+const MAX_AGE = 8 * 60 * 60
+
+function setCookie(name: string, value: string): void {
+    document.cookie = `${name}=${value}; path=/; max-age=${MAX_AGE}; SameSite=Strict`
+}
+
+function clearCookie(name: string): void {
+    document.cookie = `${name}=; path=/; max-age=0; SameSite=Strict`
 }
 
 export function useAuth() {
@@ -47,15 +60,15 @@ export function useAuth() {
 
             if (typeof window !== 'undefined') {
                 localStorage.setItem('bioactiva_token', accessToken)
-                document.cookie = `bioactiva_token=${accessToken}; path=/; max-age=${8 * 60 * 60}; SameSite=Strict`
+                setCookie('bioactiva_token', accessToken)
             }
 
-            let usuario
+            let usuarioData
 
             try {
-                usuario = await authService.getMe()
+                usuarioData = await authService.getMe()
             } catch {
-                usuario = {
+                usuarioData = useAuthStore.getState().usuario ?? {
                     id: 0,
                     nombres: 'Usuario',
                     apellidos: '',
@@ -67,7 +80,11 @@ export function useAuth() {
                 }
             }
 
-            setSession(accessToken, usuario)
+            if (typeof window !== 'undefined') {
+                setCookie('bioactiva_rol', usuarioData.rol)
+            }
+
+            setSession(accessToken, usuarioData)
             router.push(ROUTES.dashboard)
         } catch (err: unknown) {
             if (typeof window !== 'undefined') {
@@ -85,7 +102,8 @@ export function useAuth() {
         } catch {
         } finally {
             if (typeof window !== 'undefined') {
-                document.cookie = 'bioactiva_token=; path=/; max-age=0; SameSite=Strict'
+                clearCookie('bioactiva_token')
+                clearCookie('bioactiva_rol')
             }
             clearSession()
             router.push(ROUTES.auth.login)
@@ -96,9 +114,7 @@ export function useAuth() {
         try {
             resetMessages()
             setIsLoading(true)
-
             await authService.forgotPassword(data.correo)
-
             setSuccess('Correo de recuperación enviado correctamente.')
         } catch (err: unknown) {
             setError(extractMessage(err, 'Error al enviar el correo. Intente nuevamente.'))
@@ -107,16 +123,14 @@ export function useAuth() {
         }
     }
 
-    const validateToken = useCallback(async (token: string) => {
+    const validateToken = useCallback(async (token: string): Promise<ValidateTokenResult> => {
         try {
             resetMessages()
             setIsLoading(true)
-
             const response = await authService.validateToken(token)
-            return response
+            return { valid: true, correo: response.correo }
         } catch (err: unknown) {
-            setError(extractMessage(err, 'Error al validar el token. Intente nuevamente.'))
-            return { valid: false }
+            return { valid: false, message: extractMessage(err, 'El enlace no es válido o ha expirado.') }
         } finally {
             setIsLoading(false)
         }
@@ -126,9 +140,7 @@ export function useAuth() {
         try {
             resetMessages()
             setIsLoading(true)
-
-            await authService.resetPassword(token, data.password)
-
+            await authService.resetPassword(token, data.password, data.confirmPassword)
             setSuccess('Contraseña restablecida correctamente. Ya puede iniciar sesión.')
             setTimeout(() => router.push(ROUTES.auth.login), 2000)
         } catch (err: unknown) {
@@ -142,11 +154,8 @@ export function useAuth() {
         try {
             resetMessages()
             setIsLoading(true)
-
             await authService.activateAccount({ token, ...data })
-
             setSuccess('Cuenta activada correctamente. Redirigiendo...')
-
             setTimeout(() => router.push(ROUTES.auth.login), 2000)
         } catch (err: unknown) {
             setError(extractMessage(err, 'Error al activar la cuenta. Intente nuevamente.'))
@@ -161,9 +170,7 @@ export function useAuth() {
         success,
         isAuthenticated,
         usuario,
-
         isAdministrador,
-
         login,
         logout,
         forgotPassword,

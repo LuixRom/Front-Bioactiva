@@ -3,18 +3,26 @@ export const ENDPOINTS = {
         login: '/auth/login',
         refresh: '/auth/refresh',
         me: '/auth/me',
-        forgotPassword: '/auth/forgot-password',
-        resetPassword: '/auth/reset-password',
+        forgotPassword: '/reset-password/request',
+        validateToken: '/reset-password/validate',
+        resetPassword: '/reset-password/reset',
         activate: '/auth/activate',
-        validateToken: (token: string) => `/auth/validate-token/${token}`,
         logout: '/auth/logout',
     },
     usuarios: {
         list: '/api/usuarios',
         detail: (id: number) => `/api/usuarios/${id}`,
-        invite: '/api/usuarios/invite',
+        cambiarPassword: (id: number) => `/api/usuarios/${id}/password`,
         disable: (id: number) => `/api/usuarios/${id}/disable`,
         enable: (id: number) => `/api/usuarios/${id}/enable`,
+    },
+
+    invitaciones: {
+        list: '/invitations',
+        create: '/invitations',
+        info: (token: string) => `/invitations/info/${token}`,
+        accept: '/invitations/accept',
+        revoke: (id: number) => `/invitations/${id}`,
     },
 
     organizaciones: {
@@ -87,4 +95,3 @@ export const ENDPOINTS = {
         historial: '/api/datos/historial'
     },
 } as const
-
