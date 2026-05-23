@@ -11,10 +11,24 @@ export const ENDPOINTS = {
     },
     usuarios: {
         list: '/api/usuarios',
+        invitaciones: '/api/usuarios/invitaciones',
         detail: (id: number) => `/api/usuarios/${id}`,
         invite: '/api/usuarios/invite',
+        cambiarPassword: (id: number) => `/api/usuarios/${id}/password`,
         disable: (id: number) => `/api/usuarios/${id}/disable`,
         enable: (id: number) => `/api/usuarios/${id}/enable`,
+    },
+
+    perfil: {
+        get: '/api/perfil',
+        update: '/api/perfil',
+        password: '/api/perfil/password',
+    },
+
+    integraciones: {
+        list: '/api/integraciones',
+        microsoftAuthUrl: '/api/integraciones/microsoft/auth-url',
+        microsoftDisconnect: '/api/integraciones/microsoft/disconnect',
     },
 
     organizaciones: {
