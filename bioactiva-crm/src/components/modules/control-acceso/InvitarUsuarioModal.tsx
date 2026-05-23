@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Loader2, Mail } from 'lucide-react'
@@ -19,15 +18,10 @@ export function InvitarUsuarioModal({ isLoading, error, onClose, onSubmit }: Pro
         register,
         handleSubmit,
         formState: { errors },
-        reset,
     } = useForm<InvitarUsuarioFormValues>({
         resolver: zodResolver(invitarUsuarioSchema),
         defaultValues: { correo: '', rol: RolUsuario.Trabajador },
     })
-
-    useEffect(() => {
-        reset({ correo: '', rol: RolUsuario.Trabajador })
-    }, [reset])
 
     const handleFormSubmit = async (data: InvitarUsuarioFormValues) => {
         const ok = await onSubmit(data)
@@ -69,7 +63,7 @@ export function InvitarUsuarioModal({ isLoading, error, onClose, onSubmit }: Pro
                             Correo institucional
                         </label>
                         <input
-                            type="email"
+                            type="text"
                             placeholder="usuario@bioactiva.pe"
                             autoComplete="off"
                             {...register('correo')}
