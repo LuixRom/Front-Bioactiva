@@ -10,6 +10,7 @@ import {
     ResetPasswordFormValues,
     ActivateAccountFormValues,
 } from '@/lib/validators/auth.schema'
+import { ValidateTokenResult } from '@/types/auth.types'
 
 function extractMessage(err: unknown, fallback: string): string {
     if (err instanceof Error) return err.message
@@ -107,16 +108,15 @@ export function useAuth() {
         }
     }
 
-    const validateToken = useCallback(async (token: string) => {
+    const validateToken = useCallback(async (token: string): Promise<ValidateTokenResult> => {
         try {
             resetMessages()
             setIsLoading(true)
 
             const response = await authService.validateToken(token)
-            return response
+            return { valid: true, correo: response.correo }
         } catch (err: unknown) {
-            setError(extractMessage(err, 'Error al validar el token. Intente nuevamente.'))
-            return { valid: false }
+            return { valid: false, message: extractMessage(err, 'El enlace no es válido o ha expirado.') }
         } finally {
             setIsLoading(false)
         }
@@ -127,7 +127,7 @@ export function useAuth() {
             resetMessages()
             setIsLoading(true)
 
-            await authService.resetPassword(token, data.password)
+            await authService.resetPassword(token, data.password, data.confirmPassword)
 
             setSuccess('Contraseña restablecida correctamente. Ya puede iniciar sesión.')
             setTimeout(() => router.push(ROUTES.auth.login), 2000)

@@ -57,17 +57,18 @@ export const authService = {
 
     validateToken: async (token: string): Promise<ValidateTokenResponse> => {
         if (USE_MOCK) return mockValidateToken(token)
-        const response = await apiClient.get<ValidateTokenResponse>(
-            ENDPOINTS.auth.validateToken(token),
+        const response = await apiClient.post<ValidateTokenResponse>(
+            ENDPOINTS.auth.validateToken,
+            { token },
         )
         return response.data
     },
 
-    resetPassword: async (token: string, password: string): Promise<ResetPasswordResponse> => {
+    resetPassword: async (token: string, password: string, confirmPassword: string): Promise<ResetPasswordResponse> => {
         if (USE_MOCK) return mockResetPassword(token, password)
         const response = await apiClient.post<ResetPasswordResponse>(
             ENDPOINTS.auth.resetPassword,
-            { token, password }
+            { token, password, confirmPassword },
         )
         return response.data
     },

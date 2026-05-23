@@ -3,10 +3,10 @@ export const ENDPOINTS = {
         login: '/auth/login',
         refresh: '/auth/refresh',
         me: '/auth/me',
-        forgotPassword: '/auth/forgot-password',
-        resetPassword: '/auth/reset-password',
+        forgotPassword: '/reset-password/request',
+        validateToken: '/reset-password/validate',
+        resetPassword: '/reset-password/reset',
         activate: '/auth/activate',
-        validateToken: (token: string) => `/auth/validate-token/${token}`,
         logout: '/auth/logout',
     },
     usuarios: {

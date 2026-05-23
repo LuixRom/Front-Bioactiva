@@ -60,7 +60,7 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ForgotPasswordResponse {
-    message: string
+    ok: boolean
 }
 
 export interface ResetPasswordRequest {
@@ -70,7 +70,13 @@ export interface ResetPasswordRequest {
 }
 
 export interface ResetPasswordResponse {
-    message: string
+    ok: boolean
+}
+
+export interface ValidateTokenResult {
+    valid: boolean
+    correo?: string
+    message?: string
 }
 
 export interface ActivateAccountRequest {
@@ -100,13 +106,6 @@ export interface UserToken {
 }
 
 export interface ValidateTokenResponse {
-    valid: boolean
-    correo?: string
-    rol?: RolUsuario
-    message?: string
+    correo: string
 }
 
-export interface RefreshResponse {
-    accessToken: string
-    accessTokenExpiresIn: number
-}
