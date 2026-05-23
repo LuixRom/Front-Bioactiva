@@ -8,7 +8,7 @@ export const createInvitacionSchema = z.object({
     rol: z
         .number()
         .int()
-        .min(1, 'Seleccione un rol válido'),
+        .min(0, 'Seleccione un rol válido'),
 })
 
 export type CreateInvitacionFormValues = z.infer<typeof createInvitacionSchema>

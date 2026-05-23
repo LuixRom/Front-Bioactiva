@@ -169,7 +169,7 @@ export default function ControlAccesoPage() {
     const handleInvitar = async (data: InvitarUsuarioFormValues): Promise<boolean> => {
         try {
             setInviteError(null)
-            const rolNumerico = data.rol === RolUsuario.Administrador ? 1 : 2
+            const rolNumerico = data.rol === RolUsuario.Administrador ? 0 : 1
             await createInvitacion({ correo: data.correo, rol: rolNumerico })
             return true
         } catch (err: unknown) {

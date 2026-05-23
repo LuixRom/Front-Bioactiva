@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RolUsuario } from '@/types/enums'
 
-const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/activate']
+const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/activate', '/accept-invitation']
 const ADMIN_PATHS = ['/control-acceso']
 
 export function proxy(request: NextRequest) {

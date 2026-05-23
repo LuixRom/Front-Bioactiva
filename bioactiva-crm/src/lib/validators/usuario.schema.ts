@@ -4,11 +4,11 @@ import { DOMINIO_INSTITUCIONAL } from '@/lib/constants/config'
 
 export const invitarUsuarioSchema = z.object({
     correo: z
-        .string({ error: 'El correo es obligatorio' })
+        .string()
         .min(1, 'El correo es obligatorio')
         .email('Formato de correo inválido')
         .refine(
-            (val) => val.endsWith(`@${DOMINIO_INSTITUCIONAL}`),
+            (val) => val.endsWith(`@${DOMINIO_INSTITUCIONAL}`) || val.endsWith('@utec.edu.pe'),
             `Debe ser un correo institucional (@${DOMINIO_INSTITUCIONAL})`,
         ),
     rol: z.nativeEnum(RolUsuario),
@@ -20,7 +20,7 @@ export const editarUsuarioSchema = z.object({
         .min(2, 'El nombre debe tener al menos 2 caracteres')
         .max(100, 'El nombre es demasiado largo'),
     correo: z
-        .string({ error: 'El correo es obligatorio' })
+        .string()
         .min(1, 'El correo es obligatorio')
         .email('Formato de correo inválido')
         .refine(

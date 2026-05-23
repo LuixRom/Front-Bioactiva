@@ -37,7 +37,7 @@ export function AcceptInvitationForm() {
             if (resultado) {
                 setInfo(resultado)
             } else {
-                setInfoError('El enlace no es válido o ha expirado.')
+
             }
             setCargandoInfo(false)
         }
@@ -49,9 +49,10 @@ export function AcceptInvitationForm() {
         await accept(token, data)
     }
 
-    const tokenInvalido = !cargandoInfo && (!info || info.expired || info.accepted)
+    const tokenInvalido = !cargandoInfo && (!info || info.expired || info.accepted || !!error)
 
     const mensajeInvalido = infoError
+        || error
         || (info?.expired ? 'El enlace de invitación ha expirado. Contacta al administrador para recibir una nueva invitación.' : '')
         || (info?.accepted ? 'Esta invitación ya fue utilizada. Si crees que es un error, contacta al administrador.' : '')
 

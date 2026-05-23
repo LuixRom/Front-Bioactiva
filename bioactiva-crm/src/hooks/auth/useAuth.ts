@@ -58,6 +58,11 @@ export function useAuth() {
 
             const { accessToken } = await authService.login(data)
 
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('bioactiva_token', accessToken)
+                setCookie('bioactiva_token', accessToken)
+            }
+
             let usuarioData
 
             try {
@@ -76,8 +81,6 @@ export function useAuth() {
             }
 
             if (typeof window !== 'undefined') {
-                localStorage.setItem('bioactiva_token', accessToken)
-                setCookie('bioactiva_token', accessToken)
                 setCookie('bioactiva_rol', usuarioData.rol)
             }
 
