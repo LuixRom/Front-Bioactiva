@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth.store'
@@ -13,7 +11,7 @@ import {
     ActivateAccountFormValues,
 } from '@/lib/validators/auth.schema'
 
-const MAX_AGE = 8 * 60 * 60
+const MAX_AGE = 8 * 60 * 60 // 8 horas en segundos
 
 function setCookie(name: string, value: string): void {
     document.cookie = `${name}=${value}; path=/; max-age=${MAX_AGE}; SameSite=Strict`
@@ -62,7 +60,7 @@ export function useAuth() {
             try {
                 usuarioData = await authService.getMe()
             } catch {
-                // mockLogin ya guardó el usuario correcto en el store; usarlo si existe
+                // El mock de login ya guardó el usuario correcto en el store; preferirlo
                 usuarioData = useAuthStore.getState().usuario ?? {
                     id: 0,
                     nombres: 'Usuario',

@@ -19,7 +19,11 @@ export function CambiarPasswordModal({ usuario, isLoading, error, onClose, onSub
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
 
-    const { register, handleSubmit, formState: { errors } } = useForm<CambiarPasswordFormValues>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<CambiarPasswordFormValues>({
         resolver: zodResolver(cambiarPasswordSchema),
     })
 
@@ -33,6 +37,7 @@ export function CambiarPasswordModal({ usuario, isLoading, error, onClose, onSub
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
             <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <div className="flex items-center gap-3">
@@ -44,36 +49,92 @@ export function CambiarPasswordModal({ usuario, isLoading, error, onClose, onSub
                             <p className="text-xs text-gray-500">{nombreCompleto}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"><X size={16} /></button>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                    >
+                        <X size={16} />
+                    </button>
                 </div>
+
                 <form onSubmit={handleSubmit(handleFormSubmit)} className="px-6 py-5 space-y-4">
-                    {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+                            {error}
+                        </div>
+                    )}
+
                     <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Nueva contraseña</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            Nueva contraseña
+                        </label>
                         <div className="relative">
-                            <input type={showPassword ? 'text' : 'password'} placeholder="Mínimo 6 caracteres" {...register('password')}
-                                className={`w-full px-4 py-2.5 pr-11 text-sm text-gray-900 placeholder:text-gray-400 rounded-xl border-2 outline-none transition-colors bg-gray-50 ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#1C7E3C]'}`} />
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Mínimo 6 caracteres"
+                                {...register('password')}
+                                className={`w-full px-4 py-2.5 pr-11 text-sm text-gray-900 placeholder:text-gray-400 rounded-xl border-2 outline-none transition-colors bg-gray-50
+                                    ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#1C7E3C]'}`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                         </div>
-                        {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
+                        {errors.password && (
+                            <p className="text-red-500 text-xs">{errors.password.message}</p>
+                        )}
                     </div>
+
                     <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Confirmar contraseña</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            Confirmar contraseña
+                        </label>
                         <div className="relative">
-                            <input type={showConfirm ? 'text' : 'password'} placeholder="Repita la contraseña" {...register('confirmPassword')}
-                                className={`w-full px-4 py-2.5 pr-11 text-sm text-gray-900 placeholder:text-gray-400 rounded-xl border-2 outline-none transition-colors bg-gray-50 ${errors.confirmPassword ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#1C7E3C]'}`} />
-                            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                            <input
+                                type={showConfirm ? 'text' : 'password'}
+                                placeholder="Repita la contraseña"
+                                {...register('confirmPassword')}
+                                className={`w-full px-4 py-2.5 pr-11 text-sm text-gray-900 placeholder:text-gray-400 rounded-xl border-2 outline-none transition-colors bg-gray-50
+                                    ${errors.confirmPassword ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#1C7E3C]'}`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirm(!showConfirm)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
                                 {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                         </div>
-                        {errors.confirmPassword && <p className="text-red-500 text-xs">{errors.confirmPassword.message}</p>}
+                        {errors.confirmPassword && (
+                            <p className="text-red-500 text-xs">{errors.confirmPassword.message}</p>
+                        )}
                     </div>
+
                     <div className="flex items-center justify-end gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
-                        <button type="submit" disabled={isLoading} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 disabled:cursor-not-allowed rounded-xl transition-colors">
-                            {isLoading ? <><Loader2 size={14} className="animate-spin" />Guardando...</> : 'Cambiar contraseña'}
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 disabled:cursor-not-allowed rounded-xl transition-colors"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 size={14} className="animate-spin" />
+                                    Guardando...
+                                </>
+                            ) : (
+                                'Cambiar contraseña'
+                            )}
                         </button>
                     </div>
                 </form>
