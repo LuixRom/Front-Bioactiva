@@ -4,7 +4,7 @@ services:
   bioactiva-frontend-local:
     profiles: ["local"]
     ports:
-      - "4000:3000"
+      - "${PORT:-4000}:4000"
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,6 +12,9 @@ services:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
         NEXT_PUBLIC_USE_MOCK: ${NEXT_PUBLIC_USE_MOCK}
         NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME}
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-4000}
 
   bioactiva-frontend-prod:
     profiles: ["prod"]
@@ -20,9 +23,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: ${BACKEND_BIOACTIVA}
-        NEXT_PUBLIC_USE_MOCK: ${NEXT_PUBLIC_USE_MOCK:-false}
-        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Bioactiva CRM}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_USE_MOCK: false
+        NEXT_PUBLIC_APP_NAME: "Bioactiva CRM"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-4000}
     networks:
       - proxy_net
     restart: unless-stopped
