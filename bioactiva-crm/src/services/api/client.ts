@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios'
-import { API_BASE_URL, TOKEN_KEY } from '@/lib/constants/config'
+import { API_BASE_URL, TOKEN_KEY, USER_KEY } from '@/lib/constants/config'
 import { ROUTES } from '@/lib/constants/routes'
 
 const apiClient: AxiosInstance = axios.create({
@@ -85,7 +85,7 @@ apiClient.interceptors.response.use(
 
                 if (typeof window !== 'undefined') {
                     localStorage.removeItem(TOKEN_KEY)
-                    localStorage.removeItem('bioactiva_user')
+                    localStorage.removeItem(USER_KEY)
                     window.location.href = ROUTES.auth.login
                 }
                 return Promise.reject(refreshError)

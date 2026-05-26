@@ -4,12 +4,18 @@ import { NotificacionProgramada } from '@/types/notificacion.types'
 import { getErrorMessage } from '@/lib/utils/error.utils'
 
 // --- HOOK CENTRO ---
+// Mientras el módulo `notifications` del backend siga "Pendiente", el service
+// retorna un centro vacío en 404 sin propagar error. Usamos `retry: false`
+// para evitar 3 reintentos consecutivos por cada poll, y `refetchOnWindowFocus`
+// se mantiene desactivado para reducir tráfico cuando el módulo no aporta data.
 export function useCentroNotificaciones() {
   return useQuery({
     queryKey: ['notificaciones', 'centro'],
     queryFn:  () => notificacionesService.getCentro(),
     staleTime: 1000 * 60 * 1,
     refetchInterval: 1000 * 60 * 2, // refresca cada 2 minutos
+    refetchOnWindowFocus: false,
+    retry: false,
   })
 }
 
@@ -19,6 +25,7 @@ export function useNotificaciones() {
     queryKey: ['notificaciones', 'list'],
     queryFn:  () => notificacionesService.getAll(),
     staleTime: 1000 * 60 * 1,
+    retry: false,
   })
 }
 
