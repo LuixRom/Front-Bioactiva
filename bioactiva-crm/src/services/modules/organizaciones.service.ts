@@ -146,19 +146,18 @@ export const organizacionesService = {
    * GET /organizations/sunat/:query — versión unificada.
    * Si `query` tiene 11 dígitos numéricos, el backend hace búsqueda por RUC
    * (devuelve un objeto). Si no, busca por razón social (devuelve un arreglo).
+   *
+   * NOTA: el backend ejecuta web scraping al portal SUNAT, lo cual puede tardar
+   * 10–25 s. El timeout por defecto del apiClient (10 s) es insuficiente, por
+   * eso aquí se sobreescribe a 30 s.
    */
   sunatPorRuc: async (ruc: string): Promise<SunatRucResult> => {
     if (USE_MOCK) return mockSunatPorRuc(ruc)
-    try {
-      const { data } = await apiClient.get<SunatRucDto>(
-        ENDPOINTS.organizaciones.sunat(ruc)
-      )
-      return fromSunatRucDto(data)
-    } catch (err) {
-      // El interceptor ya estandariza el error a { status, message, data }.
-      // Re-emite tal cual para que el hook decida si mostrar inline o toast.
-      throw err
-    }
+    const { data } = await apiClient.get<SunatRucDto>(
+      ENDPOINTS.organizaciones.sunat(ruc),
+      { timeout: 30000 }
+    )
+    return fromSunatRucDto(data)
   },
 
   sunatPorNombre: async (nombre: string): Promise<SunatNombreResult[]> => {
@@ -169,7 +168,8 @@ export const organizacionesService = {
       return [{ ruc: ruc.ruc, nombre: ruc.nombre, ubicacion: ruc.ubicacion }]
     }
     const { data } = await apiClient.get<SunatRucDto[]>(
-      ENDPOINTS.organizaciones.sunat(nombre)
+      ENDPOINTS.organizaciones.sunat(nombre),
+      { timeout: 30000 }
     )
     // El doc indica que se muestran hasta los 10 primeros más coincidentes (CU003).
     return data.slice(0, 10).map(fromSunatNombreDto)

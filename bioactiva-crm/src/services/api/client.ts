@@ -97,9 +97,20 @@ apiClient.interceptors.response.use(
         const backendMessage =
             (error.response?.data as { message?: string | string[] })?.message
 
-        const mensajeFinal = Array.isArray(backendMessage)
-            ? backendMessage[0]
-            : backendMessage ?? 'Ocurrió un error inesperado'
+        let mensajeFinal: string
+        if (Array.isArray(backendMessage)) {
+            mensajeFinal = backendMessage[0]
+        } else if (backendMessage) {
+            mensajeFinal = backendMessage
+        } else if (error.code === 'ECONNABORTED' || /timeout/i.test(error.message)) {
+            // Sin response: la request fue abortada por timeout local.
+            mensajeFinal = 'La consulta tardó demasiado en responder. Inténtalo nuevamente.'
+        } else if (!error.response) {
+            // Sin response y sin timeout: probablemente fallo de red o CORS.
+            mensajeFinal = 'No se pudo conectar con el servidor. Verifica tu conexión.'
+        } else {
+            mensajeFinal = 'Ocurrió un error inesperado'
+        }
 
         return Promise.reject({
             status: error.response?.status,

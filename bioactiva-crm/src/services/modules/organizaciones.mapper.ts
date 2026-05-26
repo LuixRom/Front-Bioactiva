@@ -46,17 +46,19 @@ export interface OrganizacionCreateDto {
   codigoCliente: string
   nombre: string
   nombreComercial: string
-  subArea: string | null
-  ruc: string | null
   tipo: string
-  linkedin: string | null
-  ubicacion: string | null
-  sector: string | null
   tamano: string
-  actividadEconomica: string | null
-  alianzasEstrategicas: string | null
-  idContactoActivo: number | null
   idAuthor: number
+  // Campos opcionales: el backend valida con @MinLength(1). Solo enviar si hay
+  // contenido real; nunca null ni "".
+  subArea?: string
+  ruc?: string
+  linkedin?: string
+  ubicacion?: string
+  sector?: string
+  actividadEconomica?: string
+  alianzasEstrategicas?: string
+  idContactoActivo?: number
 }
 
 export type OrganizacionUpdateDto = Partial<Omit<OrganizacionCreateDto, 'idAuthor'>>
@@ -76,20 +78,30 @@ export interface SunatRucDto {
 // Enums dominio <-> backend
 // ---------------------------------------------------------------------------
 
+/**
+ * Enum EnterpriseType del backend (confirmado por el endpoint POST /organizations):
+ * ACADEMIA | EMPRESA_INTERNACIONAL | EMPRESA_NACIONAL | GOBIERNO_NACIONAL
+ * | INDEPENDIENTE | ONG | ORGANISMO_INTERNACIONAL
+ *
+ * El frontend solo modela 4 tipos según el Documento de Análisis y Diseño v1.6
+ * (Privada/Publica/ONG/Mixta). El mapeo es aproximado mientras se cierra la
+ * lista cerrada con el equipo backend.
+ */
 const TIPO_DOMAIN_TO_BACKEND: Record<TipoEmpresa, string> = {
-  [TipoEmpresa.Privada]: 'EMPRESA_PRIVADA',
-  [TipoEmpresa.Publica]: 'EMPRESA_PUBLICA',
+  [TipoEmpresa.Privada]: 'EMPRESA_NACIONAL',
+  [TipoEmpresa.Publica]: 'GOBIERNO_NACIONAL',
   [TipoEmpresa.ONG]: 'ONG',
-  [TipoEmpresa.Mixta]: 'EMPRESA_MIXTA',
+  [TipoEmpresa.Mixta]: 'ORGANISMO_INTERNACIONAL',
 }
 
 const TIPO_BACKEND_TO_DOMAIN: Record<string, TipoEmpresa> = {
-  EMPRESA_PRIVADA: TipoEmpresa.Privada,
-  EMPRESA_PUBLICA: TipoEmpresa.Publica,
-  ONG: TipoEmpresa.ONG,
-  EMPRESA_MIXTA: TipoEmpresa.Mixta,
-  EMPRESA_NACIONAL: TipoEmpresa.Privada, // valor visto en la doc; mapeo provisional
+  ACADEMIA: TipoEmpresa.Publica,
+  EMPRESA_INTERNACIONAL: TipoEmpresa.Privada,
+  EMPRESA_NACIONAL: TipoEmpresa.Privada,
+  GOBIERNO_NACIONAL: TipoEmpresa.Publica,
   INDEPENDIENTE: TipoEmpresa.Privada,
+  ONG: TipoEmpresa.ONG,
+  ORGANISMO_INTERNACIONAL: TipoEmpresa.Mixta,
 }
 
 const TAMANO_DOMAIN_TO_BACKEND: Record<TamanoEmpresa, string> = {
@@ -154,25 +166,50 @@ export const fromOrganizacionDto = (dto: OrganizacionDtoOut): Organizacion => ({
   updated_at: dto.updatedAt,
 })
 
+/**
+ * El backend valida campos opcionales con `@MinLength(1)`, por lo que `null` o
+ * `""` provocan 400. La estrategia es **omitir** la propiedad del payload
+ * cuando el usuario no la completó, en vez de enviar `null`.
+ */
+const trimOrUndefined = (v?: string | null): string | undefined => {
+  if (v == null) return undefined
+  const t = v.trim()
+  return t.length > 0 ? t : undefined
+}
+
 export const toCreateOrganizacionDto = (
   data: OrganizacionFormData,
   idAuthor: number
-): OrganizacionCreateDto => ({
-  codigoCliente: data.codigo_cliente ?? '',
-  nombre: data.nombre,
-  nombreComercial: data.nombre_comercial ?? data.nombre,
-  subArea: data.sub_area ?? null,
-  ruc: data.ruc && data.ruc.length > 0 ? data.ruc : null,
-  tipo: TIPO_DOMAIN_TO_BACKEND[data.tipo],
-  linkedin: data.linkedin ?? null,
-  ubicacion: data.ubicacion ?? null,
-  sector: data.sector ? SECTOR_DOMAIN_TO_BACKEND[data.sector] : null,
-  tamano: TAMANO_DOMAIN_TO_BACKEND[data.tamano],
-  actividadEconomica: data.actividad_economica ?? null,
-  alianzasEstrategicas: data.alianzas_estrategicas ?? null,
-  idContactoActivo: data.id_contacto_activo ?? null,
-  idAuthor,
-})
+): OrganizacionCreateDto => {
+  const dto: OrganizacionCreateDto = {
+    codigoCliente: data.codigo_cliente ?? '',
+    nombre: data.nombre,
+    nombreComercial: data.nombre_comercial?.trim() || data.nombre,
+    tipo: TIPO_DOMAIN_TO_BACKEND[data.tipo],
+    tamano: TAMANO_DOMAIN_TO_BACKEND[data.tamano],
+    idAuthor,
+  }
+
+  // Campos opcionales: solo se incluyen si tienen contenido real.
+  const subArea = trimOrUndefined(data.sub_area)
+  if (subArea !== undefined) dto.subArea = subArea
+  const ruc = trimOrUndefined(data.ruc)
+  if (ruc !== undefined) dto.ruc = ruc
+  const linkedin = trimOrUndefined(data.linkedin)
+  if (linkedin !== undefined) dto.linkedin = linkedin
+  const ubicacion = trimOrUndefined(data.ubicacion)
+  if (ubicacion !== undefined) dto.ubicacion = ubicacion
+  if (data.sector !== undefined)
+    dto.sector = SECTOR_DOMAIN_TO_BACKEND[data.sector]
+  const actEcon = trimOrUndefined(data.actividad_economica)
+  if (actEcon !== undefined) dto.actividadEconomica = actEcon
+  const alianzas = trimOrUndefined(data.alianzas_estrategicas)
+  if (alianzas !== undefined) dto.alianzasEstrategicas = alianzas
+  if (data.id_contacto_activo !== undefined && data.id_contacto_activo !== null)
+    dto.idContactoActivo = data.id_contacto_activo
+
+  return dto
+}
 
 export const toUpdateOrganizacionDto = (
   data: Partial<OrganizacionFormData>
@@ -181,19 +218,26 @@ export const toUpdateOrganizacionDto = (
   if (data.codigo_cliente !== undefined) dto.codigoCliente = data.codigo_cliente
   if (data.nombre !== undefined) dto.nombre = data.nombre
   if (data.nombre_comercial !== undefined) dto.nombreComercial = data.nombre_comercial
-  if (data.sub_area !== undefined) dto.subArea = data.sub_area || null
-  if (data.ruc !== undefined) dto.ruc = data.ruc && data.ruc.length > 0 ? data.ruc : null
   if (data.tipo !== undefined) dto.tipo = TIPO_DOMAIN_TO_BACKEND[data.tipo]
-  if (data.linkedin !== undefined) dto.linkedin = data.linkedin || null
-  if (data.ubicacion !== undefined) dto.ubicacion = data.ubicacion || null
-  if (data.sector !== undefined) dto.sector = SECTOR_DOMAIN_TO_BACKEND[data.sector]
   if (data.tamano !== undefined) dto.tamano = TAMANO_DOMAIN_TO_BACKEND[data.tamano]
-  if (data.actividad_economica !== undefined)
-    dto.actividadEconomica = data.actividad_economica || null
-  if (data.alianzas_estrategicas !== undefined)
-    dto.alianzasEstrategicas = data.alianzas_estrategicas || null
-  if (data.id_contacto_activo !== undefined)
-    dto.idContactoActivo = data.id_contacto_activo ?? null
+
+  // Opcionales: solo enviar si tienen contenido real.
+  const subArea = trimOrUndefined(data.sub_area)
+  if (subArea !== undefined) dto.subArea = subArea
+  const ruc = trimOrUndefined(data.ruc)
+  if (ruc !== undefined) dto.ruc = ruc
+  const linkedin = trimOrUndefined(data.linkedin)
+  if (linkedin !== undefined) dto.linkedin = linkedin
+  const ubicacion = trimOrUndefined(data.ubicacion)
+  if (ubicacion !== undefined) dto.ubicacion = ubicacion
+  if (data.sector !== undefined) dto.sector = SECTOR_DOMAIN_TO_BACKEND[data.sector]
+  const actEcon = trimOrUndefined(data.actividad_economica)
+  if (actEcon !== undefined) dto.actividadEconomica = actEcon
+  const alianzas = trimOrUndefined(data.alianzas_estrategicas)
+  if (alianzas !== undefined) dto.alianzasEstrategicas = alianzas
+  if (data.id_contacto_activo !== undefined && data.id_contacto_activo !== null)
+    dto.idContactoActivo = data.id_contacto_activo
+
   return dto
 }
 
