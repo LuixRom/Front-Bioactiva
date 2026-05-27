@@ -110,7 +110,6 @@ describe('security/useAuth', () => {
 
     const response = await act(async () => result.current.validateToken('bad-token'))
 
-    expect(response).toEqual({ valid: false })
-    expect(result.current.error).toBe('invalid')
+    expect(response).toEqual({ valid: false, message: 'invalid' })
   })
 })

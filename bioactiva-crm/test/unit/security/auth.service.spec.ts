@@ -55,11 +55,11 @@ describe('security/auth.service', () => {
   })
 
   it('gets token validation from the dynamic endpoint', async () => {
-    getMock.mockResolvedValueOnce({ data: { valid: true, correo: 'admin@bioactiva.pe' } })
+    postMock.mockResolvedValueOnce({ data: { valid: true, correo: 'admin@bioactiva.pe' } })
 
     const response = await authService.validateToken('token-abc')
 
-    expect(getMock).toHaveBeenCalledWith('/auth/validate-token/token-abc')
+    expect(postMock).toHaveBeenCalledWith('/reset-password/validate', { token: 'token-abc' })
     expect(response).toEqual({ valid: true, correo: 'admin@bioactiva.pe' })
   })
 
