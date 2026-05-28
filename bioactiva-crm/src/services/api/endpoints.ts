@@ -3,33 +3,23 @@ export const ENDPOINTS = {
         login:   '/auth/login',
         refresh: '/auth/refresh',
         me:      '/auth/me',
-        // Nota: el backend NestJS no expone `/auth/logout` aún. El logout es
-        // client-side (clearSession + redirect); este endpoint queda como
-        // contrato futuro si el equipo backend decide invalidar el refresh
-        // token server-side en el revoke.
         logout:  '/auth/logout',
     },
     resetPassword: {
-        // Base path real del backend: `/reset-password` (no bajo `/auth`).
-        // Doc HackMD §"Módulo reset_password".
-        request:  '/reset-password/request',   // POST { correo }
-        validate: '/reset-password/validate',  // POST { token } → { correo (ofuscado) }
-        reset:    '/reset-password/reset',     // POST { token, password, confirmPassword }
+        request:  '/reset-password/request',
+        validate: '/reset-password/validate',
+        reset:    '/reset-password/reset',
     },
     invitations: {
-        // Activación de cuenta nueva: el backend la maneja desde el módulo
-        // `invitations`, no desde `/auth/activate`. Doc HackMD §"Módulo invitations".
-        info:   (token: string) => `/invitations/info/${token}`, // GET
-        accept: '/invitations/accept',                            // POST
-        create: '/invitations',                                   // POST (admin)
-        list:   '/invitations',                                   // GET (admin)
-        delete: (id: number) => `/invitations/${id}`,             // DELETE (admin)
+        info:   (token: string) => `/invitations/info/${token}`,
+        accept: '/invitations/accept',
+        create: '/invitations',
+        list:   '/invitations',
+        delete: (id: number) => `/invitations/${id}`,
     },
     usuarios: {
         list: '/api/usuarios',
-        invitaciones: '/api/usuarios/invitaciones',
         detail: (id: number) => `/api/usuarios/${id}`,
-        invite: '/api/usuarios/invite',
         cambiarPassword: (id: number) => `/api/usuarios/${id}/password`,
         disable: (id: number) => `/api/usuarios/${id}/disable`,
         enable: (id: number) => `/api/usuarios/${id}/enable`,
@@ -45,6 +35,14 @@ export const ENDPOINTS = {
         list: '/api/integraciones',
         microsoftAuthUrl: '/api/integraciones/microsoft/auth-url',
         microsoftDisconnect: '/api/integraciones/microsoft/disconnect',
+    },
+
+    invitaciones: {
+        list: '/invitations',
+        create: '/invitations',
+        info: (token: string) => `/invitations/info/${token}`,
+        accept: '/invitations/accept',
+        revoke: (id: number) => `/invitations/${id}`,
     },
 
     organizaciones: {
@@ -127,4 +125,3 @@ export const ENDPOINTS = {
         historial: '/api/datos/historial',
     },
 } as const
-

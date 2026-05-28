@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth.store'
@@ -11,16 +13,7 @@ import {
     ResetPasswordFormValues,
     ActivateAccountFormValues,
 } from '@/lib/validators/auth.schema'
-
-const MAX_AGE = 8 * 60 * 60 // 8 horas en segundos
-
-function setCookie(name: string, value: string): void {
-    document.cookie = `${name}=${value}; path=/; max-age=${MAX_AGE}; SameSite=Strict`
-}
-
-function clearCookie(name: string): void {
-    document.cookie = `${name}=; path=/; max-age=0; SameSite=Strict`
-}
+import { ValidateTokenResult } from '@/types/auth.types'
 
 function extractMessage(err: unknown, fallback: string): string {
     if (err instanceof Error) return err.message
@@ -28,6 +21,16 @@ function extractMessage(err: unknown, fallback: string): string {
         return String((err as { message: unknown }).message)
     }
     return fallback
+}
+
+const MAX_AGE = 8 * 60 * 60
+
+function setCookie(name: string, value: string): void {
+    document.cookie = `${name}=${value}; path=/; max-age=${MAX_AGE}; SameSite=Strict`
+}
+
+function clearCookie(name: string): void {
+    document.cookie = `${name}=; path=/; max-age=0; SameSite=Strict`
 }
 
 export function useAuth() {
@@ -56,11 +59,6 @@ export function useAuth() {
 
             const { accessToken } = await authService.login(data)
 
-            // CRÍTICO: guardar el token ANTES de cualquier llamada autenticada.
-            // El interceptor de axios lee `TOKEN_KEY` de localStorage para
-            // inyectar el Bearer header; si llamamos a `getMe()` sin token en
-            // storage, la request sale sin Authorization y el backend responde
-            // 401, lo cual dispara el flujo de refresh y posible logout.
             if (typeof window !== 'undefined') {
                 localStorage.setItem(TOKEN_KEY, accessToken)
             }
@@ -69,10 +67,6 @@ export function useAuth() {
             try {
                 usuarioData = await authService.getMe()
             } catch {
-                // Fallback: si `/auth/me` no está disponible (404) o falla por
-                // cualquier motivo, derivamos el usuario del payload del JWT
-                // que ya contiene id, nombres, apellidos, correo, role y estado.
-                // Mejor que un objeto genérico con id=0.
                 usuarioData =
                     useAuthStore.getState().usuario ??
                     usuarioFromAccessToken(accessToken, data.correo)
@@ -127,15 +121,14 @@ export function useAuth() {
         }
     }
 
-    const validateToken = useCallback(async (token: string) => {
+    const validateToken = useCallback(async (token: string): Promise<ValidateTokenResult> => {
         try {
             resetMessages()
             setIsLoading(true)
             const response = await authService.validateToken(token)
-            return response
+            return { valid: true, correo: response.correo }
         } catch (err: unknown) {
-            setError(extractMessage(err, 'Error al validar el token. Intente nuevamente.'))
-            return { valid: false }
+            return { valid: false, message: extractMessage(err, 'El enlace no es válido o ha expirado.') }
         } finally {
             setIsLoading(false)
         }
@@ -145,7 +138,6 @@ export function useAuth() {
         try {
             resetMessages()
             setIsLoading(true)
-            // El backend exige los 3 campos (token + password + confirmPassword).
             await authService.resetPassword(token, data.password, data.confirmPassword)
             setSuccess('Contraseña restablecida correctamente. Ya puede iniciar sesión.')
             setTimeout(() => router.push(ROUTES.auth.login), 2000)

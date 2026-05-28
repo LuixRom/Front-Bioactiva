@@ -106,19 +106,10 @@ export const authService = {
                 ? err.message ?? 'El enlace de recuperación no es válido.'
                 : 'El enlace de recuperación no es válido.'
             if (status === 400) return { valid: false, message }
-            // Cualquier otro error de red/servidor lo propagamos.
             throw err
         }
     },
 
-    /**
-     * Confirma el cambio de contraseña con el token.
-     *
-     * Backend: `POST /reset-password/reset` con `{ token, password, confirmPassword }`.
-     * El backend valida que `password === confirmPassword`. El frontend ya
-     * valida con Zod, pero enviamos ambos para que el backend no rechace por
-     * `confirmPassword` faltante.
-     */
     resetPassword: async (
         token: string,
         password: string,
