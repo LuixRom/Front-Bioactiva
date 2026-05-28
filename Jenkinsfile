@@ -67,6 +67,7 @@ pipeline {
                     file(credentialsId: 'BIOACTIVA-SECRETS', variable: 'ENV_FILE')
                 ]) {
                     sh '''
+                        rm -f .env
                         cp "$ENV_FILE" .env
                         
                         docker compose \
