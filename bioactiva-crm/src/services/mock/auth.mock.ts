@@ -129,7 +129,7 @@ export const mockValidateToken = async (token: string): Promise<ValidateTokenRes
         throw { status: 400, message: 'El token de restablecimiento de contraseña ha expirado.' }
     }
 
-    return { correo: ofuscarCorreo(mockToken.correo) }
+    return { valid: true, correo: ofuscarCorreo(mockToken.correo) }
 }
 
 export const mockResetPassword = async (token: string, _password: string): Promise<ResetPasswordResponse> => {

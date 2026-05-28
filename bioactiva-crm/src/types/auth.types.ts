@@ -106,6 +106,8 @@ export interface UserToken {
 }
 
 export interface ValidateTokenResponse {
-    correo: string
+    valid: boolean
+    correo?: string
+    message?: string
 }
 

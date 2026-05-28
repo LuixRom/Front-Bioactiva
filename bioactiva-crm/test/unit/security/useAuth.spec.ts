@@ -41,7 +41,7 @@ describe('security/useAuth', () => {
   beforeEach(() => {
     useAuthStore.setState({
       usuario: null,
-      token: null,
+      accessToken: null,
       isAuthenticated: false,
       isLoading: false,
     })
