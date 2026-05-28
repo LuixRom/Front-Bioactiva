@@ -79,7 +79,7 @@ export const authService = {
             ENDPOINTS.resetPassword.request,
             { correo },
         )
-        return { message: response.data?.ok ? 'ok' : 'ok' }
+        return { ok: response.data?.ok ?? true }
     },
 
     /**
@@ -120,7 +120,7 @@ export const authService = {
             ENDPOINTS.resetPassword.reset,
             { token, password, confirmPassword },
         )
-        return { message: response.data?.ok ? 'ok' : 'ok' }
+        return { ok: response.data?.ok ?? true }
     },
 
     /**

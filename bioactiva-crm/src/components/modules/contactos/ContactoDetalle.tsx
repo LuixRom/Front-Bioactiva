@@ -131,7 +131,7 @@ export function ContactoDetalle({
             <InfoItem
               icono={<Phone size={14} />}
               label="Teléfono"
-              valor={contacto.telefono}
+              valor={contacto.telefono ?? ""}
             />
             {contacto.comentarios && (
               <div className="pt-2 border-t border-gray-50">
