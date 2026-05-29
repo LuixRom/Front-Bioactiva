@@ -18,11 +18,11 @@ export const ENDPOINTS = {
         delete: (id: number) => `/invitations/${id}`,
     },
     usuarios: {
-        list: '/api/usuarios',
-        detail: (id: number) => `/api/usuarios/${id}`,
-        cambiarPassword: (id: number) => `/api/usuarios/${id}/password`,
-        disable: (id: number) => `/api/usuarios/${id}/disable`,
-        enable: (id: number) => `/api/usuarios/${id}/enable`,
+        list: '/usuarios',
+        detail: (id: number) => `/usuarios/${id}`,
+        cambiarPassword: (id: number) => `/usuarios/${id}/password`,
+        disable: (id: number) => `/usuarios/${id}/disable`,
+        enable: (id: number) => `/usuarios/${id}/enable`,
     },
 
     perfil: {

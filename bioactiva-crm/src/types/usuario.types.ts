@@ -39,9 +39,11 @@ export interface InvitacionInfo {
 export interface InvitacionRaw {
     id: number
     correo: string
+    token?: string
     rol: number
+    invitador_id?: number
     estado: number | string
-    expires_at: string
+    expired_at: string
     consumed_at: string | null
     created_at: string
 }

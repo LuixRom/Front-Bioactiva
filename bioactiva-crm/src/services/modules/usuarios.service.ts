@@ -44,7 +44,7 @@ function mapInvitacionRaw(raw: InvitacionRaw): Invitacion {
             typeof raw.estado === 'number'
                 ? (ESTADO_TOKEN_MAP[raw.estado] ?? EstadoToken.Pendiente)
                 : (raw.estado as EstadoToken),
-        expires_at: raw.expires_at,
+        expires_at: raw.expired_at,
         consumed_at: raw.consumed_at,
         created_at: raw.created_at,
     }
@@ -90,13 +90,16 @@ export const usuariosService = {
 
     listInvitaciones: async (params?: ListInvitacionesParams): Promise<ListInvitacionesResponse> => {
         if (USE_MOCK) return mockListInvitaciones(params)
-        const response = await apiClient.get<Omit<ListInvitacionesResponse, 'data'> & { data: InvitacionRaw[] }>(
+        const response = await apiClient.get<InvitacionRaw[]>(
             ENDPOINTS.invitaciones.list,
             { params },
         )
+        const items = Array.isArray(response.data) ? response.data : []
         return {
-            ...response.data,
-            data: response.data.data.map(mapInvitacionRaw),
+            data: items.map(mapInvitacionRaw),
+            total: items.length,
+            page: params?.page ?? 1,
+            limit: params?.limit ?? 10,
         }
     },
 
