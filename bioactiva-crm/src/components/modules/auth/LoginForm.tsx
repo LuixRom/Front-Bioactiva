@@ -26,11 +26,11 @@ export function LoginForm() {
     }
 
     return (
-        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1C7E3C] via-[#1C7E3C]/90 to-[#BCF7B3]">
+        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-linear-to-br from-[#1C7E3C] via-[#1C7E3C]/90 to-[#BCF7B3]">
 
-            <div className="absolute top-[-80px] left-[-80px] w-72 h-72 rounded-full bg-white/10 blur-sm" />
-            <div className="absolute bottom-[-60px] right-[-60px] w-64 h-64 rounded-full bg-white/10 blur-sm" />
-            <div className="absolute top-1/2 left-[-120px] w-80 h-80 rounded-full bg-white/5" />
+            <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-white/10 blur-sm" />
+            <div className="absolute -bottom-15 -right-15 w-64 h-64 rounded-full bg-white/10 blur-sm" />
+            <div className="absolute top-1/2 -left-30 w-80 h-80 rounded-full bg-white/5" />
 
             <div className="relative z-10 w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl">
 
@@ -58,7 +58,7 @@ export function LoginForm() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                    <form onSubmit={handleSubmit(onSubmit)} method="post" className="space-y-5">
                         <div className="space-y-1.5">
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                 Correo electrónico
@@ -111,9 +111,7 @@ export function LoginForm() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full flex items-center justify-center gap-2 bg-[#1C7E3C] hover:bg-[#16642f]
-                disabled:bg-[#BCF7B3] disabled:cursor-not-allowed text-white font-semibold
-                py-3 px-4 rounded-xl text-sm transition-colors shadow-md shadow-[#BCF7B3]"
+                            className="w-full flex items-center justify-center gap-2 bg-[#1C7E3C] hover:bg-[#16642f] disabled:bg-[#BCF7B3] disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl text-sm transition-colors shadow-md shadow-[#BCF7B3]"
                         >
                             {isLoading ? (
                                 <>
