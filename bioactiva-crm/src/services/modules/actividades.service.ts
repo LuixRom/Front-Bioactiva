@@ -47,10 +47,11 @@ export const actividadesService = {
     return response.data
   },
 
-  complete: async (id: number): Promise<Actividad> => {
-    if (USE_MOCK) return mockCompleteActividad(id)
+  complete: async (id: number, notas?: string): Promise<Actividad> => {
+    if (USE_MOCK) return mockCompleteActividad(id, notas)
     const response = await apiClient.patch<Actividad>(
-      ENDPOINTS.actividades.complete(id)
+      ENDPOINTS.actividades.complete(id),
+      notas ? { notas } : undefined
     )
     return response.data
   },

@@ -1,6 +1,7 @@
 import { LeadState, TipoActividad, EstadoActividad } from '@/types/enums'
 import { Lead, LeadFiltros, LeadsResponse, PipelineData } from '@/types/lead.types'
 import { Actividad, ComentarioActividad } from '@/types/actividad.types'
+import { getLeadAlertLabel } from '@/lib/utils/activity-flow.utils'
 
 const MOCK_LEADS: Lead[] = [
   {
@@ -173,13 +174,25 @@ const MOCK_COMENTARIOS: ComentarioActividad[] = [
 const delay = (ms: number = 600) =>
   new Promise((resolve) => setTimeout(resolve, ms))
 
+const withAlertState = (lead: Lead): Lead => {
+  const alertLabel = getLeadAlertLabel(
+    lead,
+    MOCK_ACTIVIDADES.filter((actividad) => actividad.id_lead === lead.id)
+  )
+
+  return {
+    ...lead,
+    tiene_alerta: Boolean(alertLabel),
+    alerta_motivo: alertLabel ?? undefined,
+  }
+}
 
 export const mockGetPipeline = async (
   filtros?: LeadFiltros
 ): Promise<PipelineData> => {
   await delay()
 
-  let resultado = [...MOCK_LEADS]
+  let resultado = MOCK_LEADS.map(withAlertState)
 
   if (filtros?.search) {
     const q = filtros.search.toLowerCase()
@@ -227,7 +240,7 @@ export const mockGetLeads = async (
 ): Promise<LeadsResponse> => {
   await delay()
 
-  let resultado = [...MOCK_LEADS]
+  let resultado = MOCK_LEADS.map(withAlertState)
 
   if (filtros?.estado) {
     resultado = resultado.filter((l) => l.estado === filtros.estado)
@@ -248,7 +261,7 @@ export const mockGetLead = async (id: number): Promise<Lead> => {
   if (!lead) {
     throw { status: 404, message: 'Lead no encontrado.' }
   }
-  return lead
+  return withAlertState(lead)
 }
 
 export const mockCreateLead = async (
@@ -305,7 +318,7 @@ export const mockUpdateLead = async (
   }
 
   MOCK_LEADS[index] = actualizado
-  return actualizado
+  return withAlertState(actualizado)
 }
 
 export const mockUpdateEstadoLead = async (
@@ -327,6 +340,19 @@ export const mockCreateActividad = async (
   data: Partial<Actividad>
 ): Promise<Actividad> => {
   await delay()
+
+  const hasPendingActivity = MOCK_ACTIVIDADES.some(
+    (actividad) =>
+      actividad.id_lead === data.id_lead &&
+      actividad.estado === EstadoActividad.Pendiente
+  )
+
+  if (hasPendingActivity) {
+    throw {
+      status: 409,
+      message: 'No se puede registrar una nueva actividad mientras exista una actividad pendiente.',
+    }
+  }
 
   const nueva: Actividad = {
     id:                     Date.now(),
@@ -377,8 +403,19 @@ export const mockDeleteActividad = async (id: number): Promise<void> => {
   if (index !== -1) MOCK_ACTIVIDADES.splice(index, 1)
 }
 
-export const mockCompleteActividad = async (id: number): Promise<Actividad> => {
-  return mockUpdateActividad(id, { estado: EstadoActividad.Completada })
+export const mockCompleteActividad = async (
+  id: number,
+  notas?: string
+): Promise<Actividad> => {
+  const actividad = MOCK_ACTIVIDADES.find((a) => a.id === id)
+  const notasFinales = notas?.trim()
+    ? [actividad?.notas, `Cierre: ${notas.trim()}`].filter(Boolean).join('\n\n')
+    : actividad?.notas
+
+  return mockUpdateActividad(id, {
+    estado: EstadoActividad.Completada,
+    ...(notasFinales ? { notas: notasFinales } : {}),
+  })
 }
 
 

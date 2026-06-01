@@ -73,6 +73,11 @@ export const notificacionesService = {
     }
   },
 
+  getByLead: async (leadId: number): Promise<Notificacion[]> => {
+    const notificaciones = await notificacionesService.getAll()
+    return notificaciones.filter((notificacion) => notificacion.id_lead === leadId)
+  },
+
   marcarLeida: async (id: number): Promise<Notificacion> => {
     if (USE_MOCK) return mockMarcarLeida(id)
     const response = await apiClient.patch<Notificacion>(

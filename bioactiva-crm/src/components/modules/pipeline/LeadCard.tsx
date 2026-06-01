@@ -25,7 +25,7 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
         <div className="flex items-center gap-1.5 text-red-500">
           <AlertTriangle size={13} />
           <span className="text-xs font-bold uppercase tracking-wide">
-            Actividad vencida
+            {lead.alerta_motivo ?? 'Alerta activa'}
           </span>
         </div>
       )}

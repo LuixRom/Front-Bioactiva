@@ -23,6 +23,7 @@ export interface Lead {
   encargado_nombre?: string
   encargado_correo?: string
   tiene_alerta?:boolean 
+  alerta_motivo?: string
 }
 
 export interface LeadFiltros {

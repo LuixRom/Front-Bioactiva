@@ -58,7 +58,8 @@ export function useCompletarActividad(leadId: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: number) => actividadesService.complete(id),
+    mutationFn: ({ id, notas }: { id: number; notas?: string }) =>
+      actividadesService.complete(id, notas),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.actividades.byLead(leadId),

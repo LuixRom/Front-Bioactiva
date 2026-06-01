@@ -44,6 +44,7 @@ export function useCrearCotizacion() {
       cotizacionesService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cotizaciones'] })
+      queryClient.invalidateQueries({ queryKey: ['leads'] })
     },
     onError: (err: unknown) => {
       console.error(getErrorMessage(err))
@@ -59,6 +60,7 @@ export function useActualizarCotizacion(id: number) {
       cotizacionesService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cotizaciones'] })
+      queryClient.invalidateQueries({ queryKey: ['leads'] })
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.cotizaciones.detail(id),
       })

@@ -7,7 +7,7 @@ import { getErrorMessage } from '@/lib/utils/error.utils'
 
 export function usePipeline(filtros?: LeadFiltros) {
   return useQuery({
-    queryKey: QUERY_KEYS.leads.pipeline(),
+    queryKey: QUERY_KEYS.leads.pipeline(filtros),
     queryFn:  () => leadsService.getPipeline(filtros),
     staleTime: 1000 * 60 * 2,
   })

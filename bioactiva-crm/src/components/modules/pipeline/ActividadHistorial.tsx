@@ -44,6 +44,8 @@ function ActividadItem({
 }) {
   const [expandido,   setExpandido]   = useState(false)
   const [nuevoComment, setNuevoComment] = useState('')
+  const [mostrandoCierre, setMostrandoCierre] = useState(false)
+  const [notaCierre, setNotaCierre] = useState('')
 
   const { mutateAsync: completar, isPending: completando } =
     useCompletarActividad(leadId)
@@ -71,6 +73,12 @@ function ActividadItem({
     if (!nuevoComment.trim()) return
     await crearComentario(nuevoComment.trim())
     setNuevoComment('')
+  }
+
+  const handleCompletar = async () => {
+    await completar({ id: actividad.id, notas: notaCierre.trim() || undefined })
+    setMostrandoCierre(false)
+    setNotaCierre('')
   }
 
   return (
@@ -103,7 +111,7 @@ function ActividadItem({
           <div className="flex items-center gap-1 shrink-0">
             {esPendiente && (
               <button
-                onClick={() => completar(actividad.id)}
+                onClick={() => setMostrandoCierre((prev) => !prev)}
                 disabled={completando}
                 title="Marcar como completada"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
@@ -160,6 +168,50 @@ function ActividadItem({
           <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
             {actividad.notas}
           </p>
+        )}
+
+        {mostrandoCierre && (
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/60
+            p-3 space-y-2">
+            <label className="block text-xs font-semibold text-emerald-700
+              uppercase tracking-wide">
+              Nota de cierre
+            </label>
+            <textarea
+              rows={2}
+              value={notaCierre}
+              onChange={(event) => setNotaCierre(event.target.value)}
+              placeholder="Qué se hizo, resultado o siguiente acuerdo..."
+              className="w-full px-3 py-2 rounded-xl border border-emerald-100
+                bg-white text-sm text-gray-900 outline-none
+                focus:border-emerald-400 placeholder:text-gray-400 resize-none"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMostrandoCierre(false)
+                  setNotaCierre('')
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold
+                  text-gray-500 hover:bg-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleCompletar}
+                disabled={completando}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5
+                  rounded-lg text-xs font-semibold bg-emerald-600
+                  hover:bg-emerald-700 disabled:bg-emerald-300 text-white
+                  transition-colors"
+              >
+                <CheckCircle2 size={13} />
+                Completar actividad
+              </button>
+            </div>
+          </div>
         )}
       </div>
 

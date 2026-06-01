@@ -70,6 +70,7 @@ export function LeadForm({
 
   const orgSeleccionada   = useWatch({ control, name: 'id_org' })
   const encargadoSelected = useWatch({ control, name: 'id_encargado' })
+  const estadoActual      = useWatch({ control, name: 'estado' }) ?? LeadState.Prospecto
 
   const { data: orgsData }      = useOrganizaciones({ limit: 100 })
   const organizaciones          = orgsData?.data ?? []
@@ -167,19 +168,21 @@ export function LeadForm({
         </div>
 
 
+        <input type="hidden" {...register('estado')} />
+
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Estado inicial <span className="text-red-500">*</span>
+              Estado del pipeline
             </label>
-            <select
-              {...register('estado')}
-              className={`${inputClass(!!errors.estado)} cursor-pointer`}
-            >
-              {Object.values(LeadState).map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            <div className="w-full px-4 py-2.5 rounded-xl border border-gray-200
+              bg-gray-50 text-sm text-gray-600">
+              {estadoActual}
+            </div>
+            <p className="text-xs text-gray-400">
+              El cambio de estado se gestiona desde la ficha del lead y valida
+              las cotizaciones asociadas.
+            </p>
             {errors.estado && (
               <p className="text-red-500 text-xs">{errors.estado.message}</p>
             )}

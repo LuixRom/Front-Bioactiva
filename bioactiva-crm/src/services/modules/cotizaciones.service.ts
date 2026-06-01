@@ -8,6 +8,8 @@ import {
   mockUpdateCotizacion,
   mockGetKpis,
 } from '@/services/mock/cotizaciones.mock'
+import { leadsService } from '@/services/modules/leads.service'
+import { getLeadStateFromCotizacion } from '@/lib/utils/lead-flow.utils'
 import {
   Cotizacion,
   CotizacionFiltros,
@@ -15,6 +17,12 @@ import {
   CotizacionFormData,
   CotizacionKpis,
 } from '@/types/cotizacion.types'
+
+async function syncLeadEstadoFromCotizacion(cotizacion: Cotizacion) {
+  const leadState = getLeadStateFromCotizacion(cotizacion.estado)
+  if (!leadState) return
+  await leadsService.updateEstado(cotizacion.id_lead, leadState)
+}
 
 export const cotizacionesService = {
 
@@ -36,24 +44,30 @@ export const cotizacionesService = {
   },
 
   create: async (data: CotizacionFormData): Promise<Cotizacion> => {
-    if (USE_MOCK) return mockCreateCotizacion(data)
-    const response = await apiClient.post<Cotizacion>(
-      ENDPOINTS.cotizaciones.create,
-      data
-    )
-    return response.data
+    const cotizacion = USE_MOCK
+      ? await mockCreateCotizacion(data)
+      : (await apiClient.post<Cotizacion>(
+          ENDPOINTS.cotizaciones.create,
+          data
+        )).data
+
+    await syncLeadEstadoFromCotizacion(cotizacion)
+    return cotizacion
   },
 
   update: async (
     id: number,
     data: Partial<CotizacionFormData>
   ): Promise<Cotizacion> => {
-    if (USE_MOCK) return mockUpdateCotizacion(id, data)
-    const response = await apiClient.patch<Cotizacion>(
-      ENDPOINTS.cotizaciones.update(id),
-      data
-    )
-    return response.data
+    const cotizacion = USE_MOCK
+      ? await mockUpdateCotizacion(id, data)
+      : (await apiClient.patch<Cotizacion>(
+          ENDPOINTS.cotizaciones.update(id),
+          data
+        )).data
+
+    await syncLeadEstadoFromCotizacion(cotizacion)
+    return cotizacion
   },
 
   getKpis: async (): Promise<CotizacionKpis> => {
